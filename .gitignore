@@ -1,0 +1,13 @@
+# WorkBuddy 项目内部数据（工作日志 / 应用登记），不属于源码
+.workbuddy/
+.wbapp_*.genie
+
+# 微信开发者工具的本地私有配置（每个开发者各自生成）
+project.private.config.json
+
+# 系统与编辑器杂项
+.DS_Store
+*.log
+
+# 依赖
+node_modules/
