@@ -11,3 +11,5 @@ project.private.config.json
 
 # 依赖
 node_modules/
+
+.workbuddy
