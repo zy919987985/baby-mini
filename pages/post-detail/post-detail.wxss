@@ -16,10 +16,16 @@
 }
 .post-images { display: flex; flex-wrap: wrap; margin-bottom: 22rpx; }
 .post-img {
-  width: 200rpx;
-  height: 200rpx;
+  width: 220rpx;
+  height: 220rpx;
   border-radius: 16rpx;
-  margin: 0 16rpx 16rpx 0;
+  margin: 0 14rpx 14rpx 0;
+  background: #FAF6F3;
+}
+.post-img-single {
+  width: 100%;
+  border-radius: 18rpx;
+  margin-bottom: 16rpx;
   background: #FAF6F3;
 }
 .post-tags { margin-bottom: 10rpx; }

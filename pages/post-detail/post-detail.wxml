@@ -12,13 +12,16 @@
     <view class="post-title">{{post.title}}</view>
     <view class="post-content">{{post.content}}</view>
 
-    <view class="post-cover cover" style="background: {{post.coverStyle}}">
+    <view wx:if="{{!post.images || !post.images.length}}" class="post-cover cover" style="background: {{post.coverStyle}}">
       <text class="cover-emoji">{{post.coverEmoji}}</text>
       <view wx:if="{{post.recipeTitle}}" class="cover-label">📖 {{post.recipeTitle}}</view>
     </view>
 
     <view wx:if="{{post.images && post.images.length}}" class="post-images">
-      <image wx:for="{{post.images}}" wx:for-item="img" wx:key="*this" class="post-img" src="{{img}}" mode="aspectFill" data-urls="{{post.images}}" data-current="{{img}}" bindtap="previewPostImage" />
+      <image wx:if="{{post.images.length === 1}}" class="post-img-single" src="{{post.images[0]}}" mode="widthFix" data-urls="{{post.images}}" data-current="{{post.images[0]}}" bindtap="previewPostImage" />
+      <block wx:else>
+        <image wx:for="{{post.images}}" wx:for-item="img" wx:key="*this" class="post-img" src="{{img}}" mode="aspectFill" data-urls="{{post.images}}" data-current="{{img}}" bindtap="previewPostImage" />
+      </block>
     </view>
 
     <view class="post-tags">

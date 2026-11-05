@@ -53,7 +53,7 @@
     <view data-id="{{item.id}}" bindtap="openPost">
       <view class="post-title">{{item.title}}</view>
       <view class="post-content">{{item.content}}</view>
-      <view class="post-cover cover" style="background: {{item.coverStyle}}">
+      <view wx:if="{{!item.images || !item.images.length}}" class="post-cover cover" style="background: {{item.coverStyle}}">
         <text class="cover-emoji">{{item.coverEmoji}}</text>
         <view wx:if="{{item.recipeTitle}}" class="cover-label">📖 {{item.recipeTitle}}</view>
       </view>

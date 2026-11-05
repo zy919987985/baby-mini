@@ -183,10 +183,10 @@
 
 .post-images { display: flex; flex-wrap: wrap; margin-bottom: 18rpx; }
 .post-img {
-  width: 168rpx;
-  height: 168rpx;
-  border-radius: 14rpx;
-  margin: 0 14rpx 14rpx 0;
+  width: 216rpx;
+  height: 216rpx;
+  border-radius: 16rpx;
+  margin: 0 12rpx 12rpx 0;
   background: #FAF6F3;
 }
 
