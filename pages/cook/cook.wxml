@@ -1,0 +1,148 @@
+<view class="page-wrap">
+
+  <view class="hero">
+    <view class="hero-emoji">👩‍🍳</view>
+    <view class="flex1">
+      <view class="hero-title">今天给 {{babyName}} 做什么？</view>
+      <view class="hero-sub">{{ageText}} · {{stageName}} · 建议质地 {{stageTexture}}</view>
+    </view>
+  </view>
+
+  <view class="card form-card {{generating ? 'is-busy' : ''}}">
+    <view class="form-label">选择宝宝</view>
+    <view wx:if="{{babies.length > 1}}" class="chip-row">
+      <view wx:for="{{babies}}" wx:key="id" class="chip {{babyIndex === index ? 'chip-active' : ''}}" data-i="{{index}}" bindtap="onBaby">{{item.name}} · {{item.ageText}}</view>
+    </view>
+    <view wx:else class="baby-single">{{babyAvatar}} {{babyName}}（{{ageText}}）<text class="baby-link" bindtap="goProfile">修改资料 ›</text></view>
+
+    <view class="divider"></view>
+
+    <view class="form-label">餐次</view>
+    <view class="chip-row">
+      <view wx:for="{{meals}}" wx:key="*this" class="chip {{mealType === item ? 'chip-active' : ''}}" data-v="{{item}}" bindtap="onMeal">{{item}}</view>
+    </view>
+
+    <view class="form-label mt">质地</view>
+    <view class="chip-row">
+      <view wx:for="{{textures}}" wx:key="*this" class="chip {{texture === item ? 'chip-active' : ''}}" data-v="{{item}}" bindtap="onTexture">{{item}}</view>
+    </view>
+
+    <view class="divider"></view>
+
+    <view class="allergy-head">
+      <view class="form-label">🚫 宝宝过敏食材</view>
+      <text class="form-link" bindtap="goIngredients">去修改 ›</text>
+    </view>
+    <view wx:if="{{allergyNames.length}}" class="chip-row wrap allergy-row">
+      <text wx:for="{{allergyNames}}" wx:key="*this" class="allergy-chip">{{item}}</text>
+    </view>
+    <view wx:else class="allergy-empty">暂未标记过敏食材，可在「食材清单」中添加</view>
+    <view class="allergy-note">生成时会强制避开以上食材及其制品，并对结果做二次校验</view>
+
+    <view class="cond-box">
+      <view class="cond-title">📋 本次生成条件（三项都会随请求一起发送）</view>
+      <view class="cond-row"><text class="cond-key">餐次</text><text class="cond-val">{{mealType}}</text></view>
+      <view class="cond-row"><text class="cond-key">质地</text><text class="cond-val">{{texture}}</text></view>
+      <view class="cond-row">
+        <text class="cond-key">过敏禁用</text>
+        <view class="cond-val cond-chips">
+          <text wx:if="{{!allergyNames.length}}" class="cond-none">无</text>
+          <text wx:for="{{allergyNames}}" wx:key="*this" class="cond-chip">{{item}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="btn-primary gen-btn {{generating ? 'btn-busy' : ''}}" bindtap="onGenerate">{{generating ? '正在生成…' : '✨ 生成专属辅食'}}</view>
+    <view class="engine-tip">{{aiReady ? 'AI 生成 · 月龄与过敏信息将上传云端处理，内容仅供参考' : '当前为本地智能搭配 · 配置云开发环境后自动切换为 AI 生成'}}</view>
+  </view>
+
+  <!-- 生成中：页面内 loading，替代原来的系统 loading 弹窗，等待过程可见 -->
+  <block wx:if="{{generating}}">
+    <view class="section-title">正在生成</view>
+    <view class="card loading-card">
+      <view class="spinner-wrap">
+        <view class="spinner-ring"></view>
+        <text class="spinner-emoji">🍲</text>
+      </view>
+      <view class="loading-title">{{loadingText}}</view>
+      <view class="loading-cond">{{condMeal}} · {{condTexture}} · 避开 {{condAllergyCount}} 种过敏食材</view>
+      <view class="loading-track"><view class="loading-progress"></view></view>
+      <view class="loading-wait">已等待 {{waitSeconds}} 秒 · 大模型生成通常需要 5-20 秒</view>
+      <view class="skeleton">
+        <view class="sk-line sk-title"></view>
+        <view class="sk-line"></view>
+        <view class="sk-line sk-mid"></view>
+        <view class="sk-line sk-short"></view>
+      </view>
+    </view>
+  </block>
+
+  <block wx:if="{{recipe && !generating}}">
+    <view id="recipe-anchor" class="section-title">生成的辅食</view>
+    <view class="card recipe-card">
+      <view class="recipe-top">
+        <view class="recipe-emoji">{{recipe.emoji}}</view>
+        <view class="flex1">
+          <view class="recipe-title">{{recipe.title}}</view>
+          <view class="recipe-sub">{{recipe.ageText}} · {{recipe.mealType}} · {{recipe.texture}}</view>
+        </view>
+      </view>
+      <view class="source-line">
+        <text class="source-tag {{recipe.source === 'ai' ? 'source-ai' : ''}}">{{recipe.source === 'ai' ? '✨ AI 生成' : '🥣 本地搭配'}}</text>
+        <text class="source-note">{{recipe.source === 'ai' ? '仅供参考，喂养前请核对食材' : '已按过敏与月龄自动筛选'}}</text>
+      </view>
+      <view class="result-cond">
+        <text class="result-cond-item">餐次 · {{condMeal}}</text>
+        <text class="result-cond-item">质地 · {{condTexture}}</text>
+        <text class="result-cond-item">避开 · {{condAllergyText}}</text>
+      </view>
+      <view class="recipe-tags">
+        <text wx:for="{{recipe.tags}}" wx:key="*this" class="tag">{{item}}</text>
+      </view>
+      <view class="recipe-meta">
+        <view class="meta-cell"><text class="meta-icon">⏱️</text>{{recipe.minutes}} 分钟</view>
+        <view class="meta-cell"><text class="meta-icon">🍽️</text>{{recipe.serving}}</view>
+        <view class="meta-cell"><text class="meta-icon">🥗</text>{{recipe.ingredients.length}} 种食材</view>
+      </view>
+
+      <view class="sub-title">🥣 食材用量</view>
+      <view wx:for="{{recipe.ingredients}}" wx:key="name" class="ing-line">
+        <text class="dot">•</text><text class="flex1">{{item.name}}</text><text class="amount">{{item.amount}}</text>
+      </view>
+
+      <view class="sub-title">📝 详细制作过程（{{recipe.steps.length}} 步）</view>
+      <view wx:for="{{recipe.steps}}" wx:key="no" class="step">
+        <view class="step-no">{{item.no}}</view>
+        <view class="step-body">
+          <view class="step-title">{{item.t}}</view>
+          <view class="step-desc">{{item.d}}</view>
+        </view>
+      </view>
+
+      <view class="sub-title">💡 喂养小贴士</view>
+      <view wx:for="{{recipe.tips}}" wx:key="*this" class="tip-line">· {{item}}</view>
+      <view class="nutrition">营养重点：{{recipe.nutrition}}</view>
+
+      <view class="save-area">
+        <view wx:if="{{!saved}}" class="unsaved-tip">⚠️ 这份食谱尚未加入「我的食谱」，换一个或退出页面后会丢失</view>
+        <view wx:else class="saved-tip">✓ 已添加，可在「我的 → 我的食谱」中查看</view>
+        <view class="btn-primary save-btn {{saved ? 'save-done' : ''}} {{saving ? 'btn-busy' : ''}}" bindtap="onSaveRecipe">{{saveBtnText}}</view>
+        <view class="recipe-actions">
+          <view class="btn-ghost act-btn" bindtap="onAnother">🔄 换一个</view>
+          <view class="btn-ghost act-btn" bindtap="onPost">📣 发帖子</view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view wx:if="{{__locked}}" class="lock-mask">
+    <view class="lock-card">
+      <view class="lock-emoji">🔒</view>
+      <view class="lock-title">登录后查看</view>
+      <view class="lock-sub">制作辅食需要记录宝宝月龄与过敏情况，请先登录</view>
+      <view class="btn-primary lock-btn" bindtap="onRequireLogin">立即登录</view>
+    </view>
+  </view>
+
+  <auth-modal />
+</view>

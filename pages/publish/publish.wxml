@@ -1,0 +1,63 @@
+<view class="page-wrap">
+
+  <view class="card">
+    <view class="form-label">标题</view>
+    <input class="title-input" placeholder="给这次辅食起个名字吧" value="{{title}}" bindinput="onTitle" maxlength="40" />
+
+    <view class="form-label mt">正文</view>
+    <textarea class="content-input" placeholder="记录今天的辅食、宝宝的反应、你的小心得…" value="{{content}}" bindinput="onContent" maxlength="500" auto-height />
+    <view class="counter">{{content.length}}/500</view>
+
+    <view class="form-label mt">关联食谱 <text class="form-hint">（选填，做完辅食发帖时会自动带入）</text></view>
+    <input class="title-input small" placeholder="例如：南瓜铁米粉糊" value="{{recipeTitle}}" bindinput="onRecipe" maxlength="30" />
+
+    <view class="form-label mt">标签 <text class="form-hint">（用逗号分隔，最多 3 个）</text></view>
+    <input class="title-input small" placeholder="例如：8个月, 补铁, 排敏" value="{{tagText}}" bindinput="onTags" maxlength="40" />
+
+    <view class="form-label mt">添加图片 <text class="form-hint">（选填，最多 {{maxImages}} 张，发布前自动审核）</text></view>
+    <view class="img-grid">
+      <view wx:for="{{images}}" wx:key="path" class="img-cell">
+        <image class="up-img" src="{{item.path}}" mode="aspectFill" data-i="{{index}}" bindtap="onPreviewImage" />
+        <view wx:if="{{item.status === 'reject'}}" class="img-mask">未通过</view>
+        <view wx:elif="{{item.status === 'pass'}}" class="img-ok">✓ 已通过</view>
+        <view wx:else class="img-pending">待审核</view>
+        <view class="img-del" data-i="{{index}}" catchtap="onRemoveImage">×</view>
+      </view>
+      <view wx:if="{{images.length < maxImages}}" class="img-add" bindtap="onChooseImage">
+        <text class="add-plus">＋</text><text class="add-text">添加图片</text>
+      </view>
+    </view>
+    <view wx:if="{{images.length}}" class="img-hint">图片会连同文字一起送审；未通过的图片请删除或更换后再发布</view>
+
+    <view class="form-label mt">选一张封面</view>
+    <view class="cover-preview cover" style="background: {{coverStyle}}">
+      <text class="cover-emoji">{{coverEmoji}}</text>
+    </view>
+    <view class="emoji-grid">
+      <view wx:for="{{emojis}}" wx:key="*this" class="emoji-item {{coverEmoji === item ? 'emoji-on' : ''}}" data-v="{{item}}" bindtap="onEmoji">{{item}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{auditBusy}}" class="audit-card">
+    <view class="audit-spinner"></view>
+    <view class="flex1">
+      <view class="audit-title">🛡️ 内容审核中</view>
+      <view class="audit-sub">{{auditText}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{auditError}}" class="audit-error">
+    <view class="audit-error-title">🚫 内容未通过审核，已拦截发布</view>
+    <view class="audit-error-reason">{{auditError}}</view>
+    <view class="audit-error-tip">草稿已保留，修改后可重新提交审核</view>
+  </view>
+
+  <view class="publish-tip">
+    🛡️ 发布前会对<text class="tip-strong">文字</text>与<text class="tip-strong">图片</text>进行{{aiReady ? 'AI 自动审核' : '本地规则校验'}}，不合规内容将被拦截并保留草稿。
+    <view wx:if="{{!aiReady}}" class="tip-warn">当前生文/视觉模型未就绪，仅执行本地规则校验；请在云开发控制台「AI → 模型」开启后重试。</view>
+  </view>
+
+  <view class="btn-primary publish-btn {{auditBusy ? 'btn-busy' : ''}}" bindtap="onSubmit">{{auditBusy ? '审核中…' : '发布帖子'}}</view>
+
+  <auth-modal />
+</view>

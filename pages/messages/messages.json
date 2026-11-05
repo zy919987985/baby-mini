@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "消息",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "auth-modal": "/components/auth-modal/auth-modal"
+  }
+}

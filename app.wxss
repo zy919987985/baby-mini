@@ -1,0 +1,250 @@
+page {
+  background: #FFF8F3;
+  color: #3B322E;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+  font-size: 28rpx;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page-wrap {
+  min-height: 100vh;
+  padding: 24rpx 24rpx 48rpx;
+  box-sizing: border-box;
+}
+
+.card {
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  padding: 28rpx;
+  box-shadow: 0 8rpx 30rpx rgba(180, 140, 115, 0.07);
+  box-sizing: border-box;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex1 { flex: 1; min-width: 0; }
+
+.title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #3B322E;
+  line-height: 1.4;
+}
+
+.sub {
+  font-size: 24rpx;
+  color: #A0978F;
+}
+
+.muted { color: #8C8079; }
+
+.primary-text { color: #FF7A59; }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 21rpx;
+  color: #FF7A59;
+  background: #FFEDE6;
+  padding: 6rpx 16rpx;
+  border-radius: 999rpx;
+  margin-right: 12rpx;
+}
+
+.tag-green {
+  color: #3CA884;
+  background: #E6F7F0;
+}
+
+.tag-gray {
+  color: #8C8079;
+  background: #F4F0ED;
+}
+
+.tag-amber {
+  color: #C8891A;
+  background: #FFF3DC;
+}
+
+.tag-red {
+  color: #E0526E;
+  background: #FFE9ED;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #FF9A73, #FF6F52);
+  color: #FFFFFF;
+  font-size: 30rpx;
+  font-weight: 600;
+  border-radius: 999rpx;
+  padding: 24rpx 0;
+  text-align: center;
+  box-shadow: 0 10rpx 22rpx rgba(255, 122, 89, 0.24);
+  border: none;
+  line-height: 1.2;
+}
+
+.btn-primary::after { border: none; }
+
+.btn-ghost {
+  background: #FFF1EA;
+  color: #FF7A59;
+  font-size: 27rpx;
+  font-weight: 600;
+  border-radius: 999rpx;
+  padding: 20rpx 0;
+  text-align: center;
+  border: none;
+  line-height: 1.2;
+}
+
+.btn-ghost::after { border: none; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12rpx 26rpx;
+  border-radius: 999rpx;
+  background: #FFFFFF;
+  color: #8C8079;
+  font-size: 25rpx;
+  border: 2rpx solid #F1E8E2;
+  margin-right: 16rpx;
+  white-space: nowrap;
+}
+
+.chip-active {
+  background: #FF7A59;
+  color: #FFFFFF;
+  border-color: #FF7A59;
+  font-weight: 600;
+}
+
+.divider {
+  height: 2rpx;
+  background: #F4EDE8;
+  margin: 24rpx 0;
+}
+
+/* 未登录时的页面级「登录后查看」遮罩（受保护页共用） */
+.lock-mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(255, 248, 243, 0.97);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+}
+.lock-card { text-align: center; padding: 0 70rpx; }
+.lock-emoji { font-size: 120rpx; }
+.lock-title { font-size: 38rpx; font-weight: 700; color: #433832; margin-top: 24rpx; }
+.lock-sub { font-size: 25rpx; color: #A0978F; margin-top: 16rpx; line-height: 1.6; }
+.lock-btn { display: inline-block; margin-top: 44rpx; padding: 22rpx 84rpx; }
+
+.empty {
+  text-align: center;
+  padding: 100rpx 40rpx;
+  color: #A9A099;
+}
+
+.empty-emoji { font-size: 88rpx; display: block; margin-bottom: 20rpx; }
+.empty-text { font-size: 26rpx; }
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  margin: 34rpx 4rpx 18rpx;
+  display: flex;
+  align-items: center;
+}
+
+.section-title::before {
+  content: '';
+  width: 8rpx;
+  height: 30rpx;
+  border-radius: 6rpx;
+  background: #FF7A59;
+  margin-right: 14rpx;
+}
+
+.cover {
+  border-radius: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.cover-emoji { font-size: 92rpx; }
+
+.fab {
+  position: fixed;
+  right: 36rpx;
+  bottom: 60rpx;
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FF9A73, #FF6F52);
+  color: #FFFFFF;
+  font-size: 60rpx;
+  line-height: 104rpx;
+  text-align: center;
+  box-shadow: 0 12rpx 28rpx rgba(255, 111, 82, 0.38);
+  z-index: 20;
+}
+
+.modal-mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(45, 33, 28, 0.45);
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+}
+
+.modal {
+  width: 100%;
+  background: #FFFFFF;
+  border-radius: 36rpx 36rpx 0 0;
+  padding: 40rpx 32rpx 60rpx;
+  box-sizing: border-box;
+}
+
+.modal-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 32rpx;
+}
+
+.field {
+  background: #FAF6F3;
+  border-radius: 18rpx;
+  padding: 22rpx 24rpx;
+  font-size: 28rpx;
+  margin-bottom: 22rpx;
+}
+
+.field-label {
+  font-size: 24rpx;
+  color: #A0978F;
+  margin-bottom: 10rpx;
+}

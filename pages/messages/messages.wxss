@@ -1,0 +1,65 @@
+.msg-head { display: flex; align-items: center; padding: 12rpx 8rpx 28rpx; }
+.msg-title { font-size: 38rpx; font-weight: 700; }
+.msg-sub { font-size: 23rpx; color: #A0978F; margin-top: 10rpx; }
+
+.read-all {
+  font-size: 24rpx;
+  color: #FF7A59;
+  background: #FFEDE6;
+  padding: 14rpx 26rpx;
+  border-radius: 999rpx;
+}
+
+.segment { display: flex; margin: 0 4rpx 24rpx; }
+.seg-item { font-size: 27rpx; color: #A0978F; margin-right: 38rpx; padding-bottom: 12rpx; position: relative; }
+.seg-on { color: #FF7A59; font-weight: 700; }
+.seg-on::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 15%;
+  width: 70%;
+  height: 6rpx;
+  border-radius: 6rpx;
+  background: #FF7A59;
+}
+
+.msg-card { padding: 8rpx 26rpx; }
+
+.msg-row {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 0;
+  border-bottom: 2rpx solid #F7F2EE;
+}
+
+.msg-row:last-child { border-bottom: none; }
+
+.msg-avatar {
+  width: 82rpx;
+  height: 82rpx;
+  flex: 0 0 82rpx;
+  border-radius: 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 38rpx;
+  margin-right: 20rpx;
+}
+
+.msg-row-title { font-size: 27rpx; font-weight: 600; color: #433832; }
+.msg-desc { font-size: 24rpx; color: #8C8079; margin-top: 10rpx; line-height: 1.5; }
+.msg-time { font-size: 21rpx; color: #B7ABA3; margin-top: 12rpx; }
+.unread-dot { width: 16rpx; height: 16rpx; border-radius: 50%; background: #F2637B; margin-left: 14rpx; }
+.msg-arrow { font-size: 40rpx; color: #D5CBC4; margin-left: 8rpx; }
+
+.msg-foot {
+  font-size: 22rpx;
+  color: #A98A76;
+  background: #FFF1E7;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  line-height: 1.6;
+  margin-top: 30rpx;
+  text-align: center;
+}

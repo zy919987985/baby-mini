@@ -1,0 +1,30 @@
+.top { display: flex; align-items: center; }
+.emoji {
+  width: 108rpx; height: 108rpx; border-radius: 26rpx;
+  background: linear-gradient(135deg, #FFE7D6, #FFC4A8);
+  display: flex; align-items: center; justify-content: center; font-size: 60rpx; margin-right: 22rpx;
+}
+.title { font-size: 34rpx; font-weight: 700; }
+.sub { font-size: 22rpx; color: #A0978F; margin-top: 10rpx; }
+.tags { margin: 24rpx 0 10rpx; }
+.meta { display: flex; background: #FAF6F3; border-radius: 18rpx; padding: 20rpx 10rpx; margin: 18rpx 0 10rpx; }
+.meta-cell { flex: 1; text-align: center; font-size: 21rpx; color: #7C706A; }
+.sub-title { font-size: 28rpx; font-weight: 700; margin: 34rpx 0 18rpx; }
+.ing-line { display: flex; align-items: center; font-size: 26rpx; color: #6E615A; padding: 12rpx 0; border-bottom: 2rpx dashed #F3ECE7; }
+.dot { color: #FF7A59; margin-right: 14rpx; font-weight: 700; }
+.amount { color: #FF7A59; font-weight: 600; }
+.step { display: flex; margin-bottom: 26rpx; }
+.step-no {
+  width: 46rpx; height: 46rpx; flex: 0 0 46rpx; border-radius: 50%; background: #FFEDE6;
+  color: #FF7A59; font-size: 24rpx; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; margin-right: 18rpx;
+}
+.step-body { flex: 1; padding-top: 4rpx; }
+.step-title { font-size: 26rpx; font-weight: 700; color: #433832; margin-bottom: 8rpx; }
+.step-desc { font-size: 24rpx; color: #82766F; line-height: 1.7; }
+.tip-line { font-size: 23rpx; color: #82766F; line-height: 1.7; margin-bottom: 8rpx; }
+.nutrition { margin-top: 20rpx; background: #E6F7F0; color: #3CA884; font-size: 23rpx; border-radius: 16rpx; padding: 18rpx 20rpx; }
+.actions { display: flex; margin-top: 30rpx; }
+.act-btn { flex: 1; }
+.act-btn:first-child { margin-right: 20rpx; }
+.danger { color: #E0526E; background: #FFE9ED; }

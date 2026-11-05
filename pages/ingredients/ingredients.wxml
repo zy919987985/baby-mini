@@ -1,0 +1,95 @@
+<view class="page-wrap">
+
+  <view class="stat-bar">
+    <view class="stat-item">
+      <view class="stat-num" style="color:#3CA884">{{stats.normal}}</view>
+      <view class="stat-label">正常</view>
+    </view>
+    <view class="stat-line"></view>
+    <view class="stat-item">
+      <view class="stat-num" style="color:#E0526E">{{stats.allergy}}</view>
+      <view class="stat-label">过敏</view>
+    </view>
+    <view class="stat-line"></view>
+    <view class="stat-item">
+      <view class="stat-num" style="color:#A9A099">{{stats.untried}}</view>
+      <view class="stat-label">未食用</view>
+    </view>
+    <view class="stat-line"></view>
+    <view class="stat-item">
+      <view class="stat-num">{{stats.total}}</view>
+      <view class="stat-label">全部食材</view>
+    </view>
+  </view>
+
+  <view class="search-box">
+    <text class="search-icon">🔍</text>
+    <input class="search-input" placeholder="搜索食材，如：南瓜" value="{{keyword}}" bindinput="onSearch" confirm-type="search" />
+    <text wx:if="{{keyword}}" class="clear" bindtap="clearSearch">✕</text>
+  </view>
+
+  <view class="hint">点击食材右侧状态即可切换「正常 / 过敏 / 未食用」，过敏食材会在生成辅食时自动排除</view>
+
+  <view class="reset-row">
+    <view class="reset-btn" bindtap="onResetStatus">↺ 全部重置为「未食用」</view>
+  </view>
+
+  <scroll-view scroll-x class="filter-scroll" enhanced show-scrollbar="{{false}}">
+    <view class="filter-row">
+      <view wx:for="{{filters}}" wx:key="*this" class="chip {{filter === item ? 'chip-active' : ''}}" data-f="{{item}}" bindtap="onFilter">{{item}}</view>
+    </view>
+  </scroll-view>
+
+  <view wx:for="{{groups}}" wx:key="id" wx:for-item="group" class="group">
+    <view class="group-head">
+      <view class="group-icon" style="background:{{group.color}}">{{group.icon}}</view>
+      <view class="group-name">{{group.name}}</view>
+      <view class="group-count">{{group.items.length}} 种</view>
+    </view>
+    <view class="card group-card">
+      <view wx:for="{{group.items}}" wx:key="id" class="ing-row" data-id="{{item.id}}" bindtap="onStatus">
+        <view class="ing-emoji">{{item.icon}}</view>
+        <view class="flex1">
+          <view class="ing-name">{{item.name}}
+            <text wx:if="{{item.allergen}}" class="allergen">高致敏</text>
+          </view>
+          <view class="ing-note">{{item.minMonth}}月龄+ · {{item.note}}</view>
+        </view>
+        <view class="status-pill" style="color:{{item.statusColor}};background:{{item.statusBg}}">{{item.statusLabel}} ›</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{groups.length === 0}}" class="empty">
+    <text class="empty-emoji">🥣</text>
+    <view class="empty-text">没有符合条件的食材</view>
+  </view>
+
+  <view class="add-btn" bindtap="openAdd">+ 添加自定义食材</view>
+
+  <view wx:if="{{showAdd}}" class="modal-mask" bindtap="closeAdd">
+    <view class="modal" catchtap="noop">
+      <view class="modal-title">添加自定义食材</view>
+      <view class="field">
+        <view class="field-label">食材名称</view>
+        <input placeholder="例如：秋葵" value="{{newName}}" bindinput="onNewName" maxlength="12" />
+      </view>
+      <view class="field">
+        <view class="field-label">建议引入月龄</view>
+        <input type="number" placeholder="6" value="{{newMonth}}" bindinput="onNewMonth" maxlength="2" />
+      </view>
+      <view class="btn-primary" bindtap="submitAdd">保存食材</view>
+    </view>
+  </view>
+
+  <view wx:if="{{__locked}}" class="lock-mask">
+    <view class="lock-card">
+      <view class="lock-emoji">🔒</view>
+      <view class="lock-title">登录后查看</view>
+      <view class="lock-sub">食材清单与过敏标记为个人喂养记录，请先登录</view>
+      <view class="btn-primary lock-btn" bindtap="onRequireLogin">立即登录</view>
+    </view>
+  </view>
+
+  <auth-modal />
+</view>

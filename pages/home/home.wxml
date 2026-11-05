@@ -1,0 +1,89 @@
+<view class="page-wrap">
+
+  <view wx:if="{{cloudOffline}}" class="offline-banner">⚠️ 云端未连接，当前展示本地缓存；离线期间的改动暂未同步</view>
+
+  <view class="home-head">
+    <view class="flex1">
+      <view class="hello">{{greeting}}，{{babyName}}的家长 👋</view>
+      <view class="home-sub">{{babyName}} · {{ageText}} · {{stageName}}</view>
+    </view>
+    <view class="head-avatar" bindtap="goProfile">{{babyAvatar}}</view>
+  </view>
+
+  <view class="tip-card">
+    <view class="tip-emoji">🍼</view>
+    <view class="flex1">
+      <view class="tip-title">今日辅食建议</view>
+      <view class="tip-text">{{todayTip}}</view>
+    </view>
+  </view>
+
+  <view class="quick-row">
+    <view class="quick" bindtap="goCook">
+      <text class="quick-emoji">👩‍🍳</text>
+      <text class="quick-label">生成辅食</text>
+    </view>
+    <view class="quick" bindtap="goIngredients">
+      <text class="quick-emoji">🥕</text>
+      <text class="quick-label">食材标记</text>
+    </view>
+    <view class="quick" bindtap="goMessages">
+      <text class="quick-emoji">🔔</text>
+      <text class="quick-label">消息</text>
+      <view wx:if="{{unread > 0}}" class="quick-badge">{{unread}}</view>
+    </view>
+  </view>
+
+  <view class="segment">
+    <view class="seg-item {{filter === '推荐' ? 'seg-on' : ''}}" data-f="推荐" bindtap="onFilter">推荐</view>
+    <view class="seg-item {{filter === '最新' ? 'seg-on' : ''}}" data-f="最新" bindtap="onFilter">最新</view>
+    <view class="seg-item {{filter === '收藏' ? 'seg-on' : ''}}" data-f="收藏" bindtap="onFilter">我的收藏</view>
+  </view>
+
+  <view wx:for="{{posts}}" wx:key="id" class="post card">
+    <view class="post-head" data-id="{{item.id}}" bindtap="openPost">
+      <view class="avatar">{{item.authorAvatar}}</view>
+      <view class="flex1">
+        <view class="post-author">{{item.authorName}}</view>
+        <view class="post-time">{{item.timeText}} · {{item.ageTag}}</view>
+      </view>
+      <view wx:if="{{item.isMine}}" class="tag tag-gray">我的</view>
+    </view>
+
+    <view data-id="{{item.id}}" bindtap="openPost">
+      <view class="post-title">{{item.title}}</view>
+      <view class="post-content">{{item.content}}</view>
+      <view class="post-cover cover" style="background: {{item.coverStyle}}">
+        <text class="cover-emoji">{{item.coverEmoji}}</text>
+        <view wx:if="{{item.recipeTitle}}" class="cover-label">📖 {{item.recipeTitle}}</view>
+      </view>
+      <view wx:if="{{item.images && item.images.length}}" class="post-images">
+        <image wx:for="{{item.images}}" wx:for-item="img" wx:key="*this" class="post-img" src="{{img}}" mode="aspectFill" data-urls="{{item.images}}" data-current="{{img}}" catchtap="previewPostImage" />
+      </view>
+      <view class="post-tags">
+        <text wx:for="{{item.tags}}" wx:for-item="tg" wx:key="*this" class="tag tag-green">{{tg}}</text>
+      </view>
+    </view>
+
+    <view class="post-actions">
+      <view class="act {{item.liked ? 'act-on' : ''}}" data-id="{{item.id}}" bindtap="onLike">
+        <text class="act-icon">{{item.liked ? '❤️' : '🤍'}}</text> {{item.likeCount}}
+      </view>
+      <view class="act" data-id="{{item.id}}" bindtap="openPost">
+        <text class="act-icon">💬</text> {{item.commentCount}}
+      </view>
+      <view class="act {{item.favorited ? 'act-on' : ''}}" data-id="{{item.id}}" bindtap="onFav">
+        <text class="act-icon">{{item.favorited ? '⭐' : '☆'}}</text> {{item.favCount}}
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{posts.length === 0}}" class="empty">
+    <text class="empty-emoji">🍽️</text>
+    <view class="empty-text">{{filter === '收藏' ? '还没有收藏的帖子，去逛逛吧' : '还没有帖子，来发第一条吧'}}</view>
+  </view>
+
+  <view class="fab" bindtap="goPublish">+</view>
+
+  <auth-modal />
+</view>

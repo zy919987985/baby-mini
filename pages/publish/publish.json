@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "发帖子",
+  "usingComponents": {
+    "auth-modal": "/components/auth-modal/auth-modal"
+  }
+}

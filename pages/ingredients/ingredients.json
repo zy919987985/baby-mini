@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "食材清单",
+  "usingComponents": {
+    "auth-modal": "/components/auth-modal/auth-modal"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "食谱详情",
+  "usingComponents": {
+    "auth-modal": "/components/auth-modal/auth-modal"
+  }
+}

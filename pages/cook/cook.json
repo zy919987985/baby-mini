@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "制作辅食",
+  "usingComponents": {
+    "auth-modal": "/components/auth-modal/auth-modal"
+  }
+}

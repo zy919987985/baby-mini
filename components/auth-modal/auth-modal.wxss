@@ -1,0 +1,90 @@
+/* 登录弹层样式：组件内自包含，不依赖 app.wxss（自定义组件默认样式隔离，
+   app.wxss 的全局类不会作用到组件内部节点，故这里完整声明）。 */
+
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(45, 33, 28, 0.5);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  width: 84%;
+  max-width: 620rpx;
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  padding: 44rpx 36rpx 40rpx;
+  box-sizing: border-box;
+}
+
+.modal-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 18rpx;
+}
+
+.login-tip { font-size: 23rpx; color: #A0978F; text-align: center; margin-bottom: 28rpx; }
+
+.field {
+  background: #FAF6F3;
+  border-radius: 18rpx;
+  padding: 22rpx 24rpx;
+  font-size: 28rpx;
+  margin-bottom: 22rpx;
+  box-sizing: border-box;
+}
+.field-label { font-size: 24rpx; color: #A0978F; margin-bottom: 10rpx; }
+
+.btn-primary {
+  background: linear-gradient(135deg, #FF9A73, #FF6F52);
+  color: #FFFFFF;
+  font-size: 30rpx;
+  font-weight: 600;
+  border-radius: 999rpx;
+  padding: 24rpx 0;
+  text-align: center;
+  box-shadow: 0 10rpx 22rpx rgba(255, 122, 89, 0.24);
+  border: none;
+  line-height: 1.2;
+  margin-top: 8rpx;
+}
+.btn-primary::after { border: none; }
+
+.avatar-picker {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  background: #FAF6F3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 28rpx;
+  padding: 0;
+  line-height: 1.2;
+  overflow: hidden;
+  border: 2rpx dashed #FFCDBA;
+}
+.avatar-picker::after { border: none; }
+.picker-emoji { font-size: 56rpx; }
+.picker-hint { font-size: 18rpx; color: #B0A49B; margin-top: 8rpx; }
+.picked-avatar { width: 160rpx; height: 160rpx; border-radius: 50%; }
+
+.modal-cancel { text-align: center; font-size: 26rpx; color: #A0978F; padding: 28rpx 0 0; }
+.local-note {
+  font-size: 20rpx;
+  color: #B0A49B;
+  text-align: center;
+  line-height: 1.6;
+  background: #FAF6F3;
+  border-radius: 14rpx;
+  padding: 16rpx;
+  margin-top: 24rpx;
+}

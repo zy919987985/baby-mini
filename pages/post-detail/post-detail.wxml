@@ -1,0 +1,57 @@
+<view class="page-wrap detail-wrap">
+
+  <view wx:if="{{post}}" class="card">
+    <view class="post-head">
+      <view class="avatar">{{post.authorAvatar}}</view>
+      <view class="flex1">
+        <view class="post-author">{{post.authorName}}</view>
+        <view class="post-time">{{post.timeText}}</view>
+      </view>
+    </view>
+
+    <view class="post-title">{{post.title}}</view>
+    <view class="post-content">{{post.content}}</view>
+
+    <view class="post-cover cover" style="background: {{post.coverStyle}}">
+      <text class="cover-emoji">{{post.coverEmoji}}</text>
+      <view wx:if="{{post.recipeTitle}}" class="cover-label">📖 {{post.recipeTitle}}</view>
+    </view>
+
+    <view wx:if="{{post.images && post.images.length}}" class="post-images">
+      <image wx:for="{{post.images}}" wx:for-item="img" wx:key="*this" class="post-img" src="{{img}}" mode="aspectFill" data-urls="{{post.images}}" data-current="{{img}}" bindtap="previewPostImage" />
+    </view>
+
+    <view class="post-tags">
+      <text wx:for="{{post.tags}}" wx:key="*this" class="tag tag-green">{{item}}</text>
+    </view>
+
+    <view class="post-actions">
+      <view class="act {{post.liked ? 'act-on' : ''}}" bindtap="onLike">{{post.liked ? '❤️' : '🤍'}} 赞 {{post.likeCount}}</view>
+      <view class="act" bindtap="focusInput">💬 评论 {{comments.length}}</view>
+      <view class="act {{post.favorited ? 'act-on' : ''}}" bindtap="onFav">{{post.favorited ? '⭐' : '☆'}} 收藏 {{post.favCount}}</view>
+    </view>
+  </view>
+
+  <view class="section-title">全部评论（{{comments.length}}）</view>
+  <view class="card comment-card">
+    <view wx:for="{{comments}}" wx:key="id" class="comment">
+      <view class="c-avatar">{{item.avatar}}</view>
+      <view class="flex1">
+        <view class="c-name">{{item.authorName}} <text wx:if="{{item.isMine}}" class="c-mine">我</text></view>
+        <view class="c-text">{{item.content}}</view>
+        <view class="c-time">{{item.timeText}}</view>
+      </view>
+    </view>
+    <view wx:if="{{comments.length === 0}}" class="empty">
+      <text class="empty-emoji">💬</text>
+      <view class="empty-text">还没有评论，来说第一句吧</view>
+    </view>
+  </view>
+
+  <view class="input-bar">
+    <input class="c-input" placeholder="说点什么…" value="{{draft}}" bindinput="onDraft" focus="{{inputFocus}}" confirm-type="send" bindconfirm="sendComment" cursor-spacing="16" />
+    <view class="send-btn" bindtap="sendComment">发送</view>
+  </view>
+
+  <auth-modal />
+</view>

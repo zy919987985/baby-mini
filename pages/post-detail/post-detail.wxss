@@ -1,0 +1,49 @@
+.detail-wrap { padding-bottom: 160rpx; }
+.post-head { display: flex; align-items: center; margin-bottom: 24rpx; }
+.avatar {
+  width: 72rpx; height: 72rpx; border-radius: 50%; background: #FFF0E7;
+  display: flex; align-items: center; justify-content: center; font-size: 38rpx; margin-right: 18rpx;
+}
+.post-author { font-size: 28rpx; font-weight: 600; }
+.post-time { font-size: 21rpx; color: #ADA39B; margin-top: 6rpx; }
+.post-title { font-size: 36rpx; font-weight: 700; line-height: 1.5; margin-bottom: 18rpx; }
+.post-content { font-size: 27rpx; color: #6E615A; line-height: 1.85; margin-bottom: 24rpx; }
+.post-cover { height: 300rpx; margin-bottom: 22rpx; }
+.cover-emoji { font-size: 120rpx; }
+.cover-label {
+  position: absolute; left: 20rpx; bottom: 18rpx; background: rgba(255,255,255,0.9);
+  color: #8A5B44; font-size: 22rpx; padding: 8rpx 18rpx; border-radius: 999rpx;
+}
+.post-images { display: flex; flex-wrap: wrap; margin-bottom: 22rpx; }
+.post-img {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 16rpx;
+  margin: 0 16rpx 16rpx 0;
+  background: #FAF6F3;
+}
+.post-tags { margin-bottom: 10rpx; }
+.post-actions { display: flex; border-top: 2rpx solid #F5EFEA; padding-top: 24rpx; margin-top: 22rpx; }
+.act { flex: 1; text-align: center; font-size: 25rpx; color: #8C8079; }
+.act-on { color: #FF7A59; font-weight: 600; }
+.comment-card { padding: 8rpx 26rpx; }
+.comment { display: flex; padding: 26rpx 0; border-bottom: 2rpx solid #F7F2EE; }
+.comment:last-child { border-bottom: none; }
+.c-avatar {
+  width: 64rpx; height: 64rpx; flex: 0 0 64rpx; border-radius: 50%; background: #FAF6F3;
+  display: flex; align-items: center; justify-content: center; font-size: 32rpx; margin-right: 18rpx;
+}
+.c-name { font-size: 25rpx; font-weight: 600; color: #5C4E46; }
+.c-mine { font-size: 19rpx; color: #FF7A59; background: #FFEDE6; padding: 2rpx 10rpx; border-radius: 8rpx; margin-left: 8rpx; }
+.c-text { font-size: 26rpx; color: #6E615A; line-height: 1.6; margin-top: 10rpx; }
+.c-time { font-size: 20rpx; color: #B7ABA3; margin-top: 12rpx; }
+.input-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; background: #FFFFFF;
+  display: flex; align-items: center; padding: 18rpx 24rpx calc(18rpx + env(safe-area-inset-bottom));
+  box-shadow: 0 -6rpx 24rpx rgba(120, 90, 70, 0.08); z-index: 30;
+}
+.c-input { flex: 1; background: #FAF6F3; border-radius: 999rpx; padding: 18rpx 28rpx; font-size: 26rpx; }
+.send-btn {
+  margin-left: 18rpx; background: linear-gradient(135deg, #FF9A73, #FF6F52); color: #FFFFFF;
+  font-size: 26rpx; font-weight: 600; padding: 18rpx 34rpx; border-radius: 999rpx;
+}

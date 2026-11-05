@@ -1,0 +1,127 @@
+<view class="page-wrap">
+
+  <view class="user-card">
+    <view class="user-avatar">
+      <image wx:if="{{user && user.isImageAvatar}}" src="{{user.avatarUrl}}" class="user-avatar-img" />
+      <text wx:else>{{user && user.avatarUrl ? user.avatarUrl : '🍼'}}</text>
+    </view>
+    <view class="flex1">
+      <view class="user-name">{{user ? user.nickName : '未登录'}}</view>
+      <view class="user-desc">{{user ? '已通过授权登录 · 记录你的辅食与宝宝档案' : '登录后记录你的辅食与宝宝档案'}}</view>
+    </view>
+    <view wx:if="{{!user}}" class="login-btn" bindtap="onRequireLogin">微信登录</view>
+    <view wx:else class="logout" bindtap="onLogout">退出</view>
+  </view>
+
+  <view class="section-title">宝宝档案</view>
+
+  <view wx:if="{{babies.length === 0}}" class="empty-card" bindtap="openNewBaby">
+    <view class="empty-card-emoji">👶</view>
+    <view class="empty-card-title">还没有宝宝档案</view>
+    <view class="empty-card-sub">添加后，辅食推荐会更贴合宝宝的月龄与过敏情况</view>
+    <view class="empty-card-btn">+ 添加宝宝档案</view>
+  </view>
+
+  <block wx:else>
+    <view wx:for="{{babies}}" wx:key="id" class="card baby-card">
+      <view class="baby-top">
+        <view class="baby-avatar">{{item.avatar}}</view>
+        <view class="flex1">
+          <view class="baby-name">{{item.name}} <text class="baby-gender">{{item.gender}}</text></view>
+          <view class="baby-sub">出生 {{item.birthday}} · {{item.ageText}}</view>
+        </view>
+        <view class="edit-btn" data-id="{{item.id}}" bindtap="openBaby">编辑</view>
+      </view>
+      <view class="baby-metrics">
+        <view class="metric"><view class="metric-num">{{item.height || '--'}}<text class="unit">cm</text></view><view class="metric-label">身高</view></view>
+        <view class="metric"><view class="metric-num">{{item.weight || '--'}}<text class="unit">kg</text></view><view class="metric-label">体重</view></view>
+        <view class="metric"><view class="metric-num">{{summary.normalCount}}<text class="unit">种</text></view><view class="metric-label">已排敏</view></view>
+        <view class="metric"><view class="metric-num red">{{summary.allergyCount}}<text class="unit">种</text></view><view class="metric-label">过敏</view></view>
+      </view>
+      <view wx:if="{{item.note}}" class="baby-note">📌 {{item.note}}</view>
+    </view>
+
+    <view class="add-baby" bindtap="openNewBaby">+ 添加宝宝档案</view>
+  </block>
+
+  <view class="section-title">我的内容</view>
+  <view class="card stat-card">
+    <view class="stat-cell"><view class="stat-cell-num">{{summary.postCount}}</view><view class="stat-cell-label">我的帖子</view></view>
+    <view class="stat-cell"><view class="stat-cell-num">{{summary.favCount}}</view><view class="stat-cell-label">收藏</view></view>
+    <view class="stat-cell" bindtap="openRecipes"><view class="stat-cell-num">{{summary.recipeCount}}</view><view class="stat-cell-label">我的食谱 ›</view></view>
+    <view class="stat-cell"><view class="stat-cell-num">{{summary.unread}}</view><view class="stat-cell-label">未读消息</view></view>
+  </view>
+
+  <view class="section-title">数据与设置</view>
+  <view class="card menu-card">
+    <view class="menu-row" bindtap="openAbout"><text class="menu-emoji">☁️</text><text class="flex1">数据存储说明</text><text class="menu-value">云端存储 ›</text></view>
+    <view class="menu-row" bindtap="goIngredients"><text class="menu-emoji">🥕</text><text class="flex1">食材清单与过敏标记</text><text class="menu-value">{{summary.totalIngredients}} 种 ›</text></view>
+    <view class="menu-row" bindtap="onReset"><text class="menu-emoji">🧹</text><text class="flex1">重置数据</text><text class="menu-value">›</text></view>
+  </view>
+
+  <view class="foot-note">宝宝辅食 · v1.0.0 · 辅食建议仅供参考，特殊情况请咨询儿科医生</view>
+
+  <!-- 宝宝档案编辑 -->
+  <view wx:if="{{showBaby}}" class="modal-mask" bindtap="closeBaby">
+    <view class="modal" catchtap="noop">
+      <view class="modal-title">{{babyForm.id ? '编辑宝宝档案' : '添加宝宝档案'}}</view>
+      <view class="field"><view class="field-label">小名</view><input placeholder="例如：小宝" value="{{babyForm.name}}" data-k="name" bindinput="onForm" maxlength="10" /></view>
+      <view class="field">
+        <view class="field-label">性别</view>
+        <picker range="{{genders}}" value="{{genderIndex}}" bindchange="onGender">
+          <view class="picker-value">{{babyForm.gender}} ›</view>
+        </picker>
+      </view>
+      <view class="field">
+        <view class="field-label">出生日期</view>
+        <picker mode="date" value="{{babyForm.birthday}}" start="2018-01-01" end="{{today}}" bindchange="onBirthday">
+          <view class="picker-value">{{babyForm.birthday}} ›</view>
+        </picker>
+      </view>
+      <view class="two-col">
+        <view class="field"><view class="field-label">身高 (cm)</view><input type="digit" placeholder="70" value="{{babyForm.height}}" data-k="height" bindinput="onForm" /></view>
+        <view class="field"><view class="field-label">体重 (kg)</view><input type="digit" placeholder="8.5" value="{{babyForm.weight}}" data-k="weight" bindinput="onForm" /></view>
+      </view>
+      <view class="field"><view class="field-label">备注</view><input placeholder="过敏史 / 喂养偏好" value="{{babyForm.note}}" data-k="note" bindinput="onForm" maxlength="30" /></view>
+      <view class="btn-primary" bindtap="saveBaby">保存档案</view>
+      <view wx:if="{{babyForm.id && babies.length > 1}}" class="delete-baby" bindtap="deleteBaby">删除该档案</view>
+      <view class="modal-cancel" bindtap="closeBaby">取消</view>
+    </view>
+  </view>
+
+  <!-- 我的食谱 -->
+  <view wx:if="{{showRecipes}}" class="modal-mask" bindtap="closeRecipes">
+    <view class="modal" catchtap="noop">
+      <view class="modal-title">我的食谱</view>
+      <scroll-view scroll-y class="recipe-scroll">
+        <view wx:for="{{recipes}}" wx:key="id" class="recipe-line" data-id="{{item.id}}" bindtap="openRecipe">
+          <text class="recipe-line-emoji">{{item.emoji}}</text>
+          <view class="flex1"><view class="recipe-line-title">{{item.title}}</view><view class="recipe-line-sub">{{item.ageText}} · {{item.steps.length}} 步</view></view>
+          <text class="msg-arrow">›</text>
+        </view>
+        <view wx:if="{{recipes.length === 0}}" class="empty"><text class="empty-emoji">📖</text><view class="empty-text">还没有保存的食谱</view></view>
+      </scroll-view>
+      <view class="modal-cancel" bindtap="closeRecipes">关闭</view>
+    </view>
+  </view>
+
+  <!-- 数据说明 -->
+  <view wx:if="{{showAbout}}" class="modal-mask" bindtap="closeAbout">
+    <view class="modal" catchtap="noop">
+      <view class="modal-title">数据存储说明</view>
+      <view class="about-text">当前版本已接入微信云开发：宝宝档案、食材标记、食谱、点赞收藏与消息存在云数据库，社区帖子与评论全端共享，帖子图片存在云存储。换设备、重装小程序数据都不会丢。</view>
+      <view class="btn-primary" bindtap="closeAbout">我知道了</view>
+    </view>
+  </view>
+
+  <view wx:if="{{__locked}}" class="lock-mask">
+    <view class="lock-card">
+      <view class="lock-emoji">🔒</view>
+      <view class="lock-title">登录后查看</view>
+      <view class="lock-sub">宝宝档案、食谱与互动记录为个人隐私，请先登录</view>
+      <view class="btn-primary lock-btn" bindtap="onRequireLogin">立即登录</view>
+    </view>
+  </view>
+
+  <auth-modal />
+</view>

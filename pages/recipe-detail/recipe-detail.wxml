@@ -1,0 +1,49 @@
+<view class="page-wrap">
+  <block wx:if="{{recipe}}">
+    <view class="card">
+      <view class="top">
+        <view class="emoji">{{recipe.emoji}}</view>
+        <view class="flex1">
+          <view class="title">{{recipe.title}}</view>
+          <view class="sub">{{recipe.babyName}} · {{recipe.ageText}} · {{recipe.mealType}}</view>
+        </view>
+      </view>
+      <view class="tags"><text wx:for="{{recipe.tags}}" wx:key="*this" class="tag">{{item}}</text></view>
+      <view class="meta">
+        <view class="meta-cell">⏱️ {{recipe.minutes}} 分钟</view>
+        <view class="meta-cell">🍽️ {{recipe.serving}}</view>
+        <view class="meta-cell">🥄 {{recipe.texture}}</view>
+      </view>
+
+      <view class="sub-title">🥣 食材用量</view>
+      <view wx:for="{{recipe.ingredients}}" wx:key="name" class="ing-line">
+        <text class="dot">•</text><text class="flex1">{{item.name}}</text><text class="amount">{{item.amount}}</text>
+      </view>
+
+      <view class="sub-title">📝 详细制作过程</view>
+      <view wx:for="{{recipe.steps}}" wx:key="no" class="step">
+        <view class="step-no">{{item.no}}</view>
+        <view class="step-body">
+          <view class="step-title">{{item.t}}</view>
+          <view class="step-desc">{{item.d}}</view>
+        </view>
+      </view>
+
+      <view class="sub-title">💡 喂养小贴士</view>
+      <view wx:for="{{recipe.tips}}" wx:key="*this" class="tip-line">· {{item}}</view>
+      <view class="nutrition">营养重点：{{recipe.nutrition}}</view>
+    </view>
+
+    <view class="actions">
+      <view class="btn-ghost act-btn" bindtap="onPost">📣 发帖子</view>
+      <view class="btn-ghost act-btn danger" bindtap="onDelete">🗑️ 删除食谱</view>
+    </view>
+  </block>
+
+  <view wx:else class="empty">
+    <text class="empty-emoji">📖</text>
+    <view class="empty-text">食谱不存在或已被删除</view>
+  </view>
+
+  <auth-modal />
+</view>

@@ -1,0 +1,18 @@
+<view wx:if="{{show}}" class="modal-mask" catchtap="close">
+  <view class="modal" catchtap="noop">
+    <view class="modal-title">微信授权登录</view>
+    <view class="login-tip">选择微信头像与昵称，用于展示你的辅食记录</view>
+    <button class="avatar-picker" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+      <image wx:if="{{tempAvatar}}" src="{{tempAvatar}}" class="picked-avatar" />
+      <text wx:else class="picker-emoji">🍼</text>
+      <view class="picker-hint">点击选择头像</view>
+    </button>
+    <view class="field">
+      <view class="field-label">昵称</view>
+      <input type="nickname" placeholder="输入或选择微信昵称" value="{{tempNick}}" bindinput="onNick" bindblur="onNick" maxlength="16" />
+    </view>
+    <view class="btn-primary" bindtap="confirm">确认登录</view>
+    <view class="modal-cancel" bindtap="close">暂不登录</view>
+    <view class="local-note">当前为本地授权：账号信息只保存在这台设备，接入云服务后可跨设备同步。</view>
+  </view>
+</view>

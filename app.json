@@ -1,0 +1,60 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/ingredients/ingredients",
+    "pages/cook/cook",
+    "pages/messages/messages",
+    "pages/profile/profile",
+    "pages/post-detail/post-detail",
+    "pages/publish/publish",
+    "pages/recipe-detail/recipe-detail"
+  ],
+  "window": {
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "navigationBarTitleText": "宝宝辅食",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FFF8F3"
+  },
+  "tabBar": {
+    "color": "#A9A29C",
+    "selectedColor": "#FF7A59",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "首页",
+        "iconPath": "images/tab-home.png",
+        "selectedIconPath": "images/tab-home-on.png"
+      },
+      {
+        "pagePath": "pages/ingredients/ingredients",
+        "text": "食材清单",
+        "iconPath": "images/tab-ingredients.png",
+        "selectedIconPath": "images/tab-ingredients-on.png"
+      },
+      {
+        "pagePath": "pages/cook/cook",
+        "text": "制作辅食",
+        "iconPath": "images/tab-cook.png",
+        "selectedIconPath": "images/tab-cook-on.png"
+      },
+      {
+        "pagePath": "pages/messages/messages",
+        "text": "消息",
+        "iconPath": "images/tab-messages.png",
+        "selectedIconPath": "images/tab-messages-on.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "images/tab-profile.png",
+        "selectedIconPath": "images/tab-profile-on.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents",
+  "sitemapLocation": "sitemap.json"
+}
