@@ -39,6 +39,17 @@
 .allergy-empty { font-size: 23rpx; color: #B0A49B; margin-top: 16rpx; }
 .allergy-note { font-size: 21rpx; color: #A9A099; line-height: 1.6; margin: 8rpx 0 22rpx; }
 
+/* 年龄边界提示（<6 个月 / 满 3 岁） */
+.age-notice {
+  background: #FFF3DC;
+  color: #A9761A;
+  font-size: 22rpx;
+  line-height: 1.6;
+  border-radius: 14rpx;
+  padding: 16rpx 20rpx;
+  margin-bottom: 24rpx;
+}
+
 /* 本次生成条件回显 */
 .cond-box { background: #FFF8F3; border-radius: 18rpx; padding: 20rpx 22rpx; margin: 0 0 24rpx; }
 .cond-title { font-size: 22rpx; color: #8A7C74; font-weight: 600; margin-bottom: 16rpx; }

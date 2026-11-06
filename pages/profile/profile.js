@@ -9,7 +9,8 @@ Page({
     user: null,
     babies: [],
     summary: {},
-    today: U.formatDate(new Date()),
+    today: U.birthdayRange().max,
+    minBirthday: U.birthdayRange().min,
     genders: GENDERS,
     genderIndex: 0,
     showLogin: false,
@@ -76,10 +77,12 @@ Page({
   /* ---------------- 宝宝档案 ---------------- */
 
   openNewBaby: function () {
+    const birthday = U.formatDate(new Date(Date.now() - 180 * 86400000))
+    this._openBirthday = birthday
     this.setData({
       showBaby: true, genderIndex: 0,
       babyForm: {
-        name: '', gender: '女宝', birthday: U.formatDate(new Date(Date.now() - 180 * 86400000)),
+        name: '', gender: '女宝', birthday: birthday,
         height: '', weight: '', avatar: '👶', note: ''
       }
     })
@@ -89,6 +92,7 @@ Page({
     const id = e.currentTarget.dataset.id
     const b = this.data.babies.filter(function (x) { return x.id === id })[0]
     if (!b) return
+    this._openBirthday = b.birthday || ''
     this.setData({
       showBaby: true,
       genderIndex: Math.max(0, GENDERS.indexOf(b.gender)),
@@ -110,11 +114,26 @@ Page({
     this.setData({ genderIndex: i, 'babyForm.gender': GENDERS[i] })
   },
 
-  onBirthday: function (e) { this.setData({ 'babyForm.birthday': e.detail.value }) },
+  onBirthday: function (e) {
+    const v = e.detail.value
+    const range = U.birthdayRange()
+    if (v < range.min || v > range.max) {
+      U.toast('出生日期需在 3 岁以内')
+      return
+    }
+    this.setData({ 'babyForm.birthday': v })
+  },
 
   saveBaby: function () {
     const f = this.data.babyForm
     if (!f.name || !f.name.trim()) return U.toast('请填写宝宝小名')
+    const range = U.birthdayRange()
+    if (!f.birthday) return U.toast('请选择出生日期')
+    if (f.birthday > range.max) return U.toast('出生日期不能晚于今天')
+    // 兼容历史档案（超过 3 岁）：只校验「本次修改过」的生日，编辑其它字段不受影响
+    if (f.birthday !== this._openBirthday && f.birthday < range.min) {
+      return U.toast('仅支持 3 岁以内的宝宝')
+    }
     const that = this
     store.saveBaby({
       id: f.id, name: f.name.trim(), gender: f.gender, birthday: f.birthday,

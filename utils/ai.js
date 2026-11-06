@@ -7,7 +7,8 @@
  *       → 任一环节失败，自动降级到本地规则引擎 utils/recipes.js
  *
  * 两条安全边界（这是本文件存在的意义）：
- * 1. 不持有任何密钥。走 wx.cloud.extend.AI（云开发托管模型），
+ * 1. 不持有任何密钥。走 wx.cloud.extend.AI.createModel('cloudbase')，
+ *    使用「小程序成长计划」赠送的 Token 额度调用 deepseek-v4.1-flash，
  *    端上只有环境 ID，API Key 由云开发平台保管。
  * 2. 过敏约束不能只靠模型「自觉遵守」。模型输出必须再过一遍文本校验，
  *    命中禁用词就重试，仍不通过则降级 —— 降级引擎本身已排除过敏食材。
@@ -24,11 +25,12 @@ const SYSTEM_PROMPT = [
   '你是婴幼儿辅食营养师助手，请依据用户条件生成一份可直接照做的宝宝辅食食谱。',
   '',
   '【最高优先级 · 安全规则】',
-  '1. 用户每次都会给出「餐次、质地、过敏禁用食材」三项条件，必须同时满足，不得忽略任何一项；食谱类型、份量、切配方式、成品形态都要与餐次和质地一致。',
-  '2. 「过敏禁用食材」列表中的任何食材、别名、含该食材的制品（油、酱、粉、汤底、调味料、加工品）一律不得出现在成品食材、标题、标签、步骤、小贴士、营养说明中。',
-  '3. 不要在输出的任何文字里复述或列出禁用食材的名称。',
-  '4. 不使用超过宝宝月龄建议引入的食材；1 岁前不加盐、糖、蜂蜜；不写医疗诊断、治疗或药效断言。',
-  '5. 圆形易噎食物（葡萄、蓝莓、坚果等）必须写明切分处理。',
+  '1. 用户每次都会给出「宝宝月龄、餐次、质地、过敏禁用食材」四项条件，必须同时满足，不得忽略任何一项；食材种类与引入月龄、份量、切配方式、成品形态、喂食安排都要与宝宝月龄、餐次和质地一致。',
+  '2. 宝宝月龄决定可用食材范围：不得使用晚于该月龄建议引入的食材；份量、软硬度、颗粒大小与每日喂食次数都要按该月龄执行。',
+  '3. 「过敏禁用食材」列表中的任何食材、别名、含该食材的制品（油、酱、粉、汤底、调味料、加工品）一律不得出现在成品食材、标题、标签、步骤、小贴士、营养说明中。',
+  '4. 不要在输出的任何文字里复述或列出禁用食材的名称。',
+  '5. 不使用超过宝宝月龄建议引入的食材；1 岁前不加盐、糖、蜂蜜；不写医疗诊断、治疗或药效断言。',
+  '6. 圆形易噎食物（葡萄、蓝莓、坚果等）必须写明切分处理。',
   '',
   '【输出格式】只输出一个 JSON 对象，不要 Markdown 代码块，不要任何解释文字：',
   '{"title":"食谱名","emoji":"一个食物 emoji","tags":["标签"],"minutes":25,"serving":"约 1 小碗","nutrition":"营养重点",',
@@ -69,6 +71,17 @@ function bannedTermsOf(names) {
   return terms
 }
 
+/**
+ * 月龄归一：0 是合法值（新生儿），不能用 `Number(v) || 6` 把 0 兜底成 6 个月，
+ * 否则会给不满 6 个月的宝宝放出 6 月龄才建议引入的食材。
+ */
+function normalizeMonths(v) {
+  const n = Number(v)
+  if (v === 0) return 0
+  if (v === undefined || v === null || v === '' || !isFinite(n)) return 6
+  return Math.max(0, Math.min(72, Math.floor(n)))
+}
+
 /** 云开发 AI 能力是否可用：环境 ID 已配置 + 基础库支持 + 已 init 成功 */
 function isAvailable() {
   try {
@@ -96,7 +109,7 @@ function buildContext(opt) {
     store.getRecipes()
   ]).then(function (res) {
     const all = res[0] || []
-    const months = Number(opt.ageMonths) || 6
+    const months = normalizeMonths(opt.ageMonths)
     const stage = R.stageFor(months)
 
     const states = {}
@@ -127,6 +140,8 @@ function buildContext(opt) {
 
     return {
       ageMonths: months,
+      ageText: opt.ageText || U.ageText(months),
+      babyName: opt.babyName || '宝宝',
       stage: stage,
       mealType: opt.mealType || '午餐',
       texture: opt.texture || stage.texture,
@@ -143,37 +158,111 @@ function buildContext(opt) {
 
 function buildUserPrompt(ctx, attempt) {
   const lines = []
-  lines.push('【本次生成条件 · 三项必须同时满足】')
-  lines.push('1）餐次：' + ctx.mealType + '。食谱类型、份量与喂食安排都要符合这一餐次。')
-  lines.push('2）质地：' + ctx.texture + '。切配、研磨、过筛、成型与最后一步的质地复核都要按此执行，并在步骤里写明。')
-  lines.push('3）过敏禁用食材：' + (ctx.allergyNames.length ? ctx.allergyNames.join('、') : '无') +
+  lines.push('【本次生成条件 · 四项必须同时满足】')
+  lines.push('1）宝宝：' + ctx.babyName + '，当前 ' + ctx.ageMonths + ' 月龄（' + ctx.ageText + '，' +
+    ctx.stage.name + '，' + ctx.stage.desc + '）。')
+  lines.push('   只能用不晚于该月龄建议引入的食材；份量、软硬度、颗粒大小、喂食频次按该月龄执行；1 岁前不加盐、糖、蜂蜜。')
+  lines.push('2）餐次：' + ctx.mealType + '。食谱类型、份量与喂食安排都要符合这一餐次。')
+  lines.push('3）质地：' + ctx.texture + '。切配、研磨、过筛、成型与最后一步的质地复核都要按此执行，并在步骤里写明。')
+  lines.push('4）过敏禁用食材：' + (ctx.allergyNames.length ? ctx.allergyNames.join('、') : '无') +
     '。成品食材、调味料、步骤与任何文字中均不得出现这些食材及其制品。')
   lines.push('')
-  lines.push('宝宝月龄：' + U.ageText(ctx.ageMonths) + '（' + ctx.stage.name + '，' + ctx.stage.desc + '）')
-  lines.push('【适龄可用食材参考】：' + ctx.safeNames.slice(0, 60).join('、'))
+  lines.push('【适龄可用食材参考（已按 ' + ctx.ageMonths + ' 月龄过滤）】：' + ctx.safeNames.slice(0, 60).join('、'))
   if (ctx.historyTitles.length) {
     lines.push('【请避开最近生成过的食谱】：' + ctx.historyTitles.join('、'))
   }
   lines.push('请生成一份全新搭配，主料组合与上述标题都不同。这是第 ' + (ctx.round + 1) + ' 次生成。')
-  lines.push('输出前逐项自检：餐次是否符合？质地是否落实？是否完全不含过敏禁用食材及其别名？')
+  lines.push('输出前逐项自检：宝宝月龄是否匹配（食材引入时间、份量、软硬度）？餐次是否符合？质地是否落实？是否完全不含过敏禁用食材及其别名？')
   if (attempt > 0) {
     lines.push('上一次输出被检测出含禁用食材，本次请更换全部主料，逐项自检后再输出 JSON。')
   }
   return lines.join('\n')
 }
 
-/** 调用云开发托管大模型（非流式）。模型名以云开发控制台已开启的为准 */
+/**
+ * 从模型返回里抽出正文。兼容几种真实存在的形态：
+ * - 小程序端原始响应：{ choices: [{ message: { content } }] }（invoke / generateText 都是这个）
+ * - Web/Node SDK 包装：{ text }，或纯字符串
+ * - 部分基础库把结果再包一层 data / result
+ * - Responses API 形态：{ output: [{ content: [{ text }] }] }
+ */
+function pickText(res, depth) {
+  const d = depth || 0
+  if (!res || d > 3) return ''
+  if (typeof res === 'string') return res
+
+  const choices = res.choices
+  if (choices && choices[0] && choices[0].message) {
+    const c = choices[0].message.content
+    if (typeof c === 'string' && c) return c
+  }
+  if (typeof res.text === 'string' && res.text) return res.text
+  if (typeof res.content === 'string' && res.content) return res.content
+
+  if (Array.isArray(res.output)) {
+    for (let i = 0; i < res.output.length; i++) {
+      const parts = res.output[i] && res.output[i].content
+      if (!Array.isArray(parts)) continue
+      for (let j = 0; j < parts.length; j++) {
+        const t = parts[j] && (parts[j].text || parts[j].content)
+        if (typeof t === 'string' && t) return t
+      }
+    }
+  }
+  if (res.data && res.data !== res) {
+    const t = pickText(res.data, d + 1)
+    if (t) return t
+  }
+  if (res.result && res.result !== res) {
+    const t = pickText(res.result, d + 1)
+    if (t) return t
+  }
+  return ''
+}
+
+/**
+ * 调用云开发托管大模型（非流式，走小程序成长计划额度）。
+ *
+ * 成长计划推荐写法是 model.invoke({ model, messages })，但小程序基础库
+ * 不同版本暴露的 API 不一致（新版 invoke / 标准 generateText，参数有时要包一层 data）。
+ * 这里按优先级依次尝试，取第一个能解析出正文的形态；全部失败才抛错，
+ * 由外层统一降级到本地规则引擎，避免升级基础库后生成功能整体失效。
+ */
 function callModel(ctx, attempt) {
-  const model = wx.cloud.extend.AI.createModel('cloudbase')
-  return model.generateText({
+  const ai = wx.cloud.extend.AI
+  const model = ai.createModel(CONFIG.MODEL_GROUP || 'cloudbase')
+  const payload = {
     model: CONFIG.MODEL,
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: buildUserPrompt(ctx, attempt) }
     ]
-  }).then(function (res) {
-    const choices = res && res.choices
-    const text = choices && choices[0] && choices[0].message && choices[0].message.content
+  }
+
+  const shapes = []
+  if (model && typeof model.invoke === 'function') {
+    shapes.push(function () { return model.invoke(payload) })
+  }
+  if (model && typeof model.generateText === 'function') {
+    shapes.push(function () { return model.generateText(payload) })
+    shapes.push(function () { return model.generateText({ data: payload }) })
+  }
+  if (!shapes.length) return Promise.reject(new Error('当前基础库不支持 AI 模型调用'))
+
+  function attemptShape(i, lastErr) {
+    if (i >= shapes.length) {
+      return Promise.reject(lastErr || new Error('AI 模型调用失败'))
+    }
+    return Promise.resolve().then(shapes[i]).then(function (res) {
+      const text = pickText(res, 0)
+      if (text) return text
+      return attemptShape(i + 1, new Error('AI 未返回内容'))
+    }).catch(function (err) {
+      return attemptShape(i + 1, err)
+    })
+  }
+
+  return attemptShape(0, null).then(function (text) {
     if (!text) throw new Error('AI 未返回内容')
     return text
   })
@@ -341,6 +430,9 @@ function normalizeRecipe(raw, ctx, opt) {
     mealType: ctx.mealType,
     texture: ctx.texture,
     condition: {
+      ageMonths: months,
+      ageText: U.ageText(months),
+      babyName: opt.babyName || '宝宝',
       mealType: ctx.mealType,
       texture: ctx.texture,
       allergyNames: ctx.allergyNames.slice()
@@ -374,7 +466,7 @@ function attemptAI(ctx, opt, attempt) {
 
 /**
  * 对外主入口（只返回草稿，不写入本地食谱库）
- * @param {Object} opt { ageMonths, mealType, texture, allergyNames, babyName, round, excludeTitle }
+ * @param {Object} opt { ageMonths, ageText, babyName, mealType, texture, allergyNames, round, excludeTitle }
  * @returns {Promise<{recipe: Object, source: 'ai'|'local', reason: string}>}
  */
 function generateRecipe(opt) {
@@ -418,6 +510,9 @@ function generateRecipe(opt) {
       }
       recipe.source = 'local'
       recipe.condition = {
+        ageMonths: context.ageMonths,
+        ageText: context.ageText,
+        babyName: o.babyName || '宝宝',
         mealType: context.mealType,
         texture: context.texture,
         allergyNames: context.allergyNames.slice()

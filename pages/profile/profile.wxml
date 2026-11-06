@@ -74,9 +74,10 @@
       </view>
       <view class="field">
         <view class="field-label">出生日期</view>
-        <picker mode="date" value="{{babyForm.birthday}}" start="2018-01-01" end="{{today}}" bindchange="onBirthday">
+        <picker mode="date" value="{{babyForm.birthday}}" start="{{minBirthday}}" end="{{today}}" bindchange="onBirthday">
           <view class="picker-value">{{babyForm.birthday}} ›</view>
         </picker>
+        <view class="birthday-hint">仅支持 3 岁以内的宝宝（{{minBirthday}} ~ {{today}}）</view>
       </view>
       <view class="two-col">
         <view class="field"><view class="field-label">身高 (cm)</view><input type="digit" placeholder="70" value="{{babyForm.height}}" data-k="height" bindinput="onForm" /></view>

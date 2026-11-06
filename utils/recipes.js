@@ -15,8 +15,19 @@ const STAGES = [
   { min: 18, max: 72, name: '成人过渡期', texture: '家常软食', feeding: '三餐两点，规律作息', desc: '注意均衡多样，避免整粒坚果与果冻' }
 ]
 
+/**
+ * 月龄归一：0 是合法值（新生儿），不能用 `Number(v) || 6` 把 0 兜底成 6 个月，
+ * 否则降级引擎会给不满 6 个月的宝宝放出 6 月龄食材。
+ */
+function normalizeMonths(v) {
+  const n = Number(v)
+  if (v === 0) return 0
+  if (v === undefined || v === null || v === '' || !isFinite(n)) return 6
+  return Math.max(0, Math.min(72, Math.floor(n)))
+}
+
 function stageFor(months) {
-  const m = Number(months) || 6
+  const m = normalizeMonths(months)
   return STAGES.filter(function (s) { return m >= s.min && m <= s.max })[0] || STAGES[0]
 }
 
@@ -291,7 +302,7 @@ function scaleAmount(amount, factor) {
 
 /** 依据月龄给出建议可用的食材 id 列表 */
 function safeIngredientIds(ageMonths, states, onlyTried) {
-  const m = Number(ageMonths) || 6
+  const m = normalizeMonths(ageMonths)
   const st = states || {}
   const list = ING.INGREDIENTS.filter(function (item) {
     if (item.minMonth > m) return false
@@ -315,7 +326,7 @@ function safeIngredientIds(ageMonths, states, onlyTried) {
 function generateRecipe(opt) {
   const o = opt || {}
   const bannedTerms = o.bannedTerms || []
-  const months = Number(o.ageMonths) || 6
+  const months = normalizeMonths(o.ageMonths)
   const stage = stageFor(months)
   const states = o.states || {}
   const safe = safeIngredientIds(months, states, false)

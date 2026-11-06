@@ -33,10 +33,17 @@ Page({
     aiReady: false,
 
     // 本次生成条件的快照：生成请求与结果展示用的是同一份，改条件不会影响已出的结果
+    // 四项条件全部快照，含「当前选择的宝宝月龄」，避免请求用的年龄和展示的年龄不一致
+    condBabyName: '',
+    condAgeMonths: 0,
+    condAgeText: '',
     condMeal: '午餐',
     condTexture: '细腻泥糊',
     condAllergyText: '无',
     condAllergyCount: 0,
+
+    // 年龄边界提示：与首页「今日辅食建议」口径一致
+    ageNotice: '',
 
     recipe: null,          // 仅是当前草稿，未写入本地食谱库
     saved: false,
@@ -88,6 +95,12 @@ Page({
       const months = U.monthAge(baby.birthday)
       const stage = R.stageFor(months)
       const chosen = that.data.texture
+      // 与首页口径一致：不满 6 个月先别加辅食；满 3 岁可逐步过渡到成人饮食
+      const ageNotice = months < 6
+        ? '🍼 宝宝还不到 6 个月，建议纯母乳 / 配方奶喂养，满 6 个月后逐步添加辅食'
+        : (months >= 36
+          ? '🍽️ 宝宝已满 3 岁，可以逐步吃成人的食物了，注意清淡少盐、均衡多样'
+          : '')
 
       that.setData({
         babies: babies,
@@ -98,6 +111,7 @@ Page({
         ageMonths: months,
         stageName: stage.name,
         stageTexture: stage.texture,
+        ageNotice: ageNotice,
         texture: chosen && that.data.textures.indexOf(chosen) >= 0 && !that._textureTouched ? stage.texture : chosen,
         // 过敏清单只读展示，来源与「食材清单」页完全同一份数据
         allergyNames: res[1].filter(function (i) { return i.status === 'allergy' })
@@ -153,11 +167,21 @@ Page({
     // 生成失败时把旧草稿还回去，避免误丢用户还没保存的结果
     this._draftBackup = prev ? { recipe: prev, saved: this.data.saved } : null
 
-    // 三项条件在这里一次性快照，之后无论用户怎么改表单都不影响本次请求
+    // 四项条件在这里一次性快照（含当前选择的宝宝月龄），
+    // 之后无论用户怎么改表单、怎么切换宝宝，都不影响本次请求与结果展示
     const cond = {
+      babyName: this.data.babyName,
+      ageMonths: this.data.ageMonths,
+      ageText: this.data.ageText,
       mealType: this.data.mealType,
       texture: this.data.texture,
       allergyNames: this.data.allergyNames.slice()
+    }
+
+    // 安全边界：不满 6 个月不生成辅食食谱，与首页「满 6 个月后逐步添加辅食」一致
+    if (cond.ageMonths < 6) {
+      U.toast('宝宝还不满 6 个月，建议满 6 个月后逐步添加辅食')
+      return
     }
 
     this.setData({
@@ -168,6 +192,9 @@ Page({
       saveBtnText: SAVE_DEFAULT,
       waitSeconds: 0,
       loadingText: LOADING_STEPS[0],
+      condBabyName: cond.babyName,
+      condAgeMonths: cond.ageMonths,
+      condAgeText: cond.ageText,
       condMeal: cond.mealType,
       condTexture: cond.texture,
       condAllergyText: cond.allergyNames.length ? cond.allergyNames.join('、') : '无',
@@ -176,11 +203,12 @@ Page({
     this._startTicker()
 
     const opt = {
-      ageMonths: this.data.ageMonths,
+      ageMonths: cond.ageMonths,
+      ageText: cond.ageText,
       mealType: cond.mealType,
       texture: cond.texture,
       allergyNames: cond.allergyNames,
-      babyName: this.data.babyName,
+      babyName: cond.babyName,
       round: round,
       excludeTitle: prev ? prev.title : ''
     }

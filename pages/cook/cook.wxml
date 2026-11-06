@@ -9,6 +9,7 @@
   </view>
 
   <view class="card form-card {{generating ? 'is-busy' : ''}}">
+    <view wx:if="{{ageNotice}}" class="age-notice">{{ageNotice}}</view>
     <view class="form-label">选择宝宝</view>
     <view wx:if="{{babies.length > 1}}" class="chip-row">
       <view wx:for="{{babies}}" wx:key="id" class="chip {{babyIndex === index ? 'chip-active' : ''}}" data-i="{{index}}" bindtap="onBaby">{{item.name}} · {{item.ageText}}</view>
@@ -40,7 +41,8 @@
     <view class="allergy-note">生成时会强制避开以上食材及其制品，并对结果做二次校验</view>
 
     <view class="cond-box">
-      <view class="cond-title">📋 本次生成条件（三项都会随请求一起发送）</view>
+      <view class="cond-title">📋 本次生成条件（四项都会随请求一起发送）</view>
+      <view class="cond-row"><text class="cond-key">宝宝</text><text class="cond-val">{{babyName}} · {{ageText}}（{{ageMonths}} 个月）· {{stageName}}</text></view>
       <view class="cond-row"><text class="cond-key">餐次</text><text class="cond-val">{{mealType}}</text></view>
       <view class="cond-row"><text class="cond-key">质地</text><text class="cond-val">{{texture}}</text></view>
       <view class="cond-row">
@@ -65,7 +67,7 @@
         <text class="spinner-emoji">🍲</text>
       </view>
       <view class="loading-title">{{loadingText}}</view>
-      <view class="loading-cond">{{condMeal}} · {{condTexture}} · 避开 {{condAllergyCount}} 种过敏食材</view>
+      <view class="loading-cond">{{condBabyName}} · {{condAgeText}} · {{condMeal}} · {{condTexture}} · 避开 {{condAllergyCount}} 种过敏食材</view>
       <view class="loading-track"><view class="loading-progress"></view></view>
       <view class="loading-wait">已等待 {{waitSeconds}} 秒 · 大模型生成通常需要 5-20 秒</view>
       <view class="skeleton">
@@ -92,6 +94,7 @@
         <text class="source-note">{{recipe.source === 'ai' ? '仅供参考，喂养前请核对食材' : '已按过敏与月龄自动筛选'}}</text>
       </view>
       <view class="result-cond">
+        <text class="result-cond-item">宝宝 · {{condBabyName}}（{{condAgeText}}）</text>
         <text class="result-cond-item">餐次 · {{condMeal}}</text>
         <text class="result-cond-item">质地 · {{condTexture}}</text>
         <text class="result-cond-item">避开 · {{condAllergyText}}</text>

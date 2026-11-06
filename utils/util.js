@@ -21,6 +21,20 @@ function timeAgo(ts) {
   return formatDate(ts)
 }
 
+/**
+ * 出生日期可选范围：本小程序面向 0-3 岁辅食阶段，
+ * 只能选择「今天往前 3 年」到「今天」之间的日期。
+ * 用 new Date(y-3, m, d) 构造可自动处理闰年 2 月 29 日。
+ */
+function birthdayRange(years) {
+  const y = Number(years) || 3
+  const now = new Date()
+  return {
+    min: formatDate(new Date(now.getFullYear() - y, now.getMonth(), now.getDate())),
+    max: formatDate(now)
+  }
+}
+
 /** 依据生日计算月龄 */
 function monthAge(birthday) {
   if (!birthday) return 6
@@ -105,6 +119,7 @@ module.exports = {
   pad: pad,
   formatDate: formatDate,
   timeAgo: timeAgo,
+  birthdayRange: birthdayRange,
   monthAge: monthAge,
   ageText: ageText,
   gradientOf: gradientOf,

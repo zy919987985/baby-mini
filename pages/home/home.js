@@ -62,14 +62,22 @@ Page({
         return Object.assign({}, p, { ageTag: (p.tags && p.tags[0]) || '辅食记录' })
       })
 
+      // 阶段提示：<6 月龄先别加辅食；满 3 岁可逐步过渡到成人饮食
+      let todayTip
+      if (months < 6) {
+        todayTip = '宝宝还不到 6 个月，建议纯母乳 / 配方奶喂养，满 6 个月后逐步添加辅食。'
+      } else if (months >= 36) {
+        todayTip = '宝宝已经' + U.ageText(months) + '啦，可以逐步吃成人的食物了：清淡少盐、均衡多样，避免整粒坚果与果冻。'
+      } else {
+        todayTip = stage.name + '：建议做成' + stage.texture + '，' + stage.feeding + '。新食材记得连续观察 3 天。'
+      }
+
       that.setData({
         babyName: baby.name || '宝宝',
         babyAvatar: baby.avatar || '👶',
         ageText: U.ageText(months),
         stageName: stage.name,
-        todayTip: months < 6
-          ? '宝宝还不到 6 个月，建议纯母乳/配方奶喂养，满 6 月龄再开始添加辅食。'
-          : stage.name + '：建议做成' + stage.texture + '，' + stage.feeding + '。新食材记得连续观察 3 天。',
+        todayTip: todayTip,
         unread: summary.unread,
         posts: posts,
         cloudOffline: !store.isCloudMode() || store.hasPendingChanges()

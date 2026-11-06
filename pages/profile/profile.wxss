@@ -186,6 +186,7 @@
 }
 
 .picker-value { font-size: 27rpx; color: #433832; }
+.birthday-hint { font-size: 21rpx; color: #B0836B; margin-top: 8rpx; line-height: 1.5; }
 .two-col { display: flex; }
 .two-col .field { flex: 1; }
 .two-col .field:first-child { margin-right: 18rpx; }
