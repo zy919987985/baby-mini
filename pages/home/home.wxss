@@ -134,9 +134,40 @@
   background: #FF7A59;
 }
 
-.post { margin-bottom: 26rpx; }
+/* ---------- 虚拟列表：定高条目 ----------
+ * 单条总高 748rpx = 722rpx 卡片 + 26rpx 间距，
+ * 与 utils/virtual-list.js 的 ITEM_RPX 必须一致。
+ * 卡片内部可用高度 = 722 - 28*2(padding) = 666rpx，按分区固定：
+ *   88(head) + 58(title) + 149(content) + 258(media)
+ *   + 42(tags) + 71(actions) = 666rpx
+ * 每个分区都不允许被内容撑高，否则上下占位会算错、列表会抖动。
+ */
+.post-list { width: 100%; }
 
-.post-head { display: flex; align-items: center; margin-bottom: 20rpx; }
+.v-slot {
+  box-sizing: border-box;
+  padding-bottom: 26rpx;
+}
+
+.v-pad { width: 100%; }
+
+.v-item {
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.post { margin-bottom: 0; }
+
+.post-head {
+  display: flex;
+  align-items: center;
+  height: 68rpx;
+  margin-bottom: 20rpx;
+  flex-shrink: 0;
+}
 
 .avatar {
   width: 68rpx;
@@ -152,23 +183,40 @@
 
 .post-author { font-size: 27rpx; font-weight: 600; color: #4A3E37; }
 .post-time { font-size: 22rpx; color: #ADA39B; margin-top: 6rpx; }
-.post-title { font-size: 31rpx; font-weight: 700; line-height: 1.5; margin-bottom: 12rpx; }
+
+.post-title {
+  font-size: 31rpx;
+  font-weight: 700;
+  line-height: 46rpx;
+  height: 46rpx;
+  margin-bottom: 12rpx;
+  flex-shrink: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 
 .post-content {
   font-size: 26rpx;
   color: #7C706A;
-  line-height: 1.65;
+  line-height: 43rpx;
+  height: 129rpx;
+  margin-bottom: 20rpx;
+  flex-shrink: 0;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
   overflow: hidden;
-  margin-bottom: 20rpx;
 }
 
-.post-cover {
+.post-media {
   height: 240rpx;
   margin-bottom: 18rpx;
+  flex-shrink: 0;
+  overflow: hidden;
 }
+
+.post-cover { height: 240rpx; }
 
 .cover-label {
   position: absolute;
@@ -181,7 +229,13 @@
   border-radius: 999rpx;
 }
 
-.post-images { display: flex; flex-wrap: wrap; margin-bottom: 18rpx; }
+.post-images {
+  display: flex;
+  flex-wrap: wrap;
+  height: 240rpx;
+  overflow: hidden;
+}
+
 .post-img {
   width: 216rpx;
   height: 216rpx;
@@ -190,13 +244,21 @@
   background: #FAF6F3;
 }
 
-.post-tags { margin-bottom: 8rpx; }
+.post-tags {
+  height: 34rpx;
+  margin-bottom: 8rpx;
+  flex-shrink: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
 
 .post-actions {
   display: flex;
   border-top: 2rpx solid #F5EFEA;
   padding-top: 20rpx;
-  margin-top: 20rpx;
+  height: 71rpx;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .act {
@@ -208,3 +270,31 @@
 
 .act-icon { font-size: 28rpx; }
 .act-on { color: #FF7A59; font-weight: 600; }
+
+/* 底部加载状态：加载中 / 已加载，两种文案都不含条数 */
+.list-status {
+  text-align: center;
+  font-size: 22rpx;
+  color: #B7ABA3;
+  padding: 10rpx 0 40rpx;
+}
+
+.status-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: #FFB199;
+  margin-right: 12rpx;
+  animation: status-pulse 1s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.15); }
+}

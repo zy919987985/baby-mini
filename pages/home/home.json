@@ -1,6 +1,7 @@
 {
   "navigationBarTitleText": "辅食圈",
   "enablePullDownRefresh": true,
+  "onReachBottomDistance": 100,
   "backgroundTextStyle": "dark",
   "usingComponents": {
     "auth-modal": "/components/auth-modal/auth-modal"

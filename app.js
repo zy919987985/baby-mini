@@ -30,7 +30,7 @@ App({
         ? wx.getSystemInfoSync().SDKVersion : 'unknown'
     })
 
-    // 数据仓库首次启动时建/读云端私有文档、播种社区内容、迁移旧本地数据。
+    // 数据仓库首次启动时建/读云端私有文档、迁移旧本地数据；社区内容全部走云端。
     // 页面所有 store 方法都会 await 这个 init，不必担心竞态。
     store.init().then(() => {
       this.globalData.offline = !store.isCloudMode()

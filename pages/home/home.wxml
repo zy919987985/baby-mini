@@ -34,53 +34,74 @@
     </view>
   </view>
 
+  <!-- 首页只有「最新 / 我的收藏」两个筛选，都按发布时间倒序 -->
   <view class="segment">
-    <view class="seg-item {{filter === '推荐' ? 'seg-on' : ''}}" data-f="推荐" bindtap="onFilter">推荐</view>
     <view class="seg-item {{filter === '最新' ? 'seg-on' : ''}}" data-f="最新" bindtap="onFilter">最新</view>
     <view class="seg-item {{filter === '收藏' ? 'seg-on' : ''}}" data-f="收藏" bindtap="onFilter">我的收藏</view>
   </view>
 
-  <view wx:for="{{posts}}" wx:key="id" class="post card">
-    <view class="post-head" data-id="{{item.id}}" bindtap="openPost">
-      <view class="avatar">{{item.authorAvatar}}</view>
-      <view class="flex1">
-        <view class="post-author">{{item.authorName}}</view>
-        <view class="post-time">{{item.timeText}} · {{item.ageTag}}</view>
+  <!--
+    虚拟列表容器：上下两个占位 view 撑起总高度，
+    中间只渲染可视窗口（含上下各 2 条预渲染）内的卡片。
+    padTop / padBottom 单位为 px，slot 高度单位为 rpx。
+  -->
+  <view id="post-list" class="post-list">
+    <view class="v-pad" style="height: {{padTop}}px"></view>
+
+    <view wx:for="{{visiblePosts}}" wx:key="id" class="v-slot" style="height: {{slotRpx}}rpx">
+      <view class="post card v-item">
+        <view class="post-head" data-id="{{item.id}}" bindtap="openPost">
+          <view class="avatar">{{item.authorAvatar}}</view>
+          <view class="flex1">
+            <view class="post-author">{{item.authorName}}</view>
+            <view class="post-time">{{item.timeText}} · {{item.ageTag}}</view>
+          </view>
+          <view wx:if="{{item.isMine}}" class="tag tag-gray">我的</view>
+        </view>
+
+        <view data-id="{{item.id}}" bindtap="openPost">
+          <view class="post-title">{{item.title}}</view>
+          <view class="post-content">{{item.content}}</view>
+          <view class="post-media">
+            <view wx:if="{{!item.images || !item.images.length}}" class="post-cover cover" style="background: {{item.coverStyle}}">
+              <text class="cover-emoji">{{item.coverEmoji}}</text>
+              <view wx:if="{{item.recipeTitle}}" class="cover-label">📖 {{item.recipeTitle}}</view>
+            </view>
+            <view wx:if="{{item.images && item.images.length}}" class="post-images">
+              <image wx:for="{{item.images}}" wx:for-item="img" wx:key="*this" class="post-img" src="{{img}}" mode="aspectFill" data-urls="{{item.images}}" data-current="{{img}}" catchtap="previewPostImage" />
+            </view>
+          </view>
+          <view class="post-tags">
+            <text wx:for="{{item.tags}}" wx:for-item="tg" wx:key="*this" class="tag tag-green">{{tg}}</text>
+          </view>
+        </view>
+
+        <view class="post-actions">
+          <view class="act {{item.liked ? 'act-on' : ''}}" data-id="{{item.id}}" bindtap="onLike">
+            <text class="act-icon">{{item.liked ? '❤️' : '🤍'}}</text> {{item.likeCount}}
+          </view>
+          <view class="act" data-id="{{item.id}}" bindtap="openPost">
+            <text class="act-icon">💬</text> {{item.commentCount}}
+          </view>
+          <view class="act {{item.favorited ? 'act-on' : ''}}" data-id="{{item.id}}" bindtap="onFav">
+            <text class="act-icon">{{item.favorited ? '⭐' : '☆'}}</text> {{item.favCount}}
+          </view>
+        </view>
       </view>
-      <view wx:if="{{item.isMine}}" class="tag tag-gray">我的</view>
     </view>
 
-    <view data-id="{{item.id}}" bindtap="openPost">
-      <view class="post-title">{{item.title}}</view>
-      <view class="post-content">{{item.content}}</view>
-      <view wx:if="{{!item.images || !item.images.length}}" class="post-cover cover" style="background: {{item.coverStyle}}">
-        <text class="cover-emoji">{{item.coverEmoji}}</text>
-        <view wx:if="{{item.recipeTitle}}" class="cover-label">📖 {{item.recipeTitle}}</view>
-      </view>
-      <view wx:if="{{item.images && item.images.length}}" class="post-images">
-        <image wx:for="{{item.images}}" wx:for-item="img" wx:key="*this" class="post-img" src="{{img}}" mode="aspectFill" data-urls="{{item.images}}" data-current="{{img}}" catchtap="previewPostImage" />
-      </view>
-      <view class="post-tags">
-        <text wx:for="{{item.tags}}" wx:for-item="tg" wx:key="*this" class="tag tag-green">{{tg}}</text>
-      </view>
-    </view>
-
-    <view class="post-actions">
-      <view class="act {{item.liked ? 'act-on' : ''}}" data-id="{{item.id}}" bindtap="onLike">
-        <text class="act-icon">{{item.liked ? '❤️' : '🤍'}}</text> {{item.likeCount}}
-      </view>
-      <view class="act" data-id="{{item.id}}" bindtap="openPost">
-        <text class="act-icon">💬</text> {{item.commentCount}}
-      </view>
-      <view class="act {{item.favorited ? 'act-on' : ''}}" data-id="{{item.id}}" bindtap="onFav">
-        <text class="act-icon">{{item.favorited ? '⭐' : '☆'}}</text> {{item.favCount}}
-      </view>
-    </view>
+    <view class="v-pad" style="height: {{padBottom}}px"></view>
   </view>
 
-  <view wx:if="{{posts.length === 0}}" class="empty">
+  <view wx:if="{{loadedCount === 0}}" class="empty">
     <text class="empty-emoji">🍽️</text>
     <view class="empty-text">{{filter === '收藏' ? '还没有收藏的帖子，去逛逛吧' : '还没有帖子，来发第一条吧'}}</view>
+  </view>
+
+  <!-- 底部加载状态：只显示「加载中 / 已加载」，不展示任何具体条数 -->
+  <view wx:if="{{loadedCount > 0}}" class="list-status">
+    <view wx:if="{{hasMore}}" class="status-loading"><view class="loading-dot"></view>加载中...</view>
+    <text wx:else>已全部加载</text>
   </view>
 
   <view class="fab" bindtap="goPublish">+</view>

@@ -7,24 +7,28 @@
  *   bf_comments    —— 评论，全局共享（权限 CUSTOM: read/write true）
  *   云存储桶        —— 帖子图片，存 cloud:// fileID（权限 READONLY）
  *
+ * 社区数据（帖子 / 评论）全部由云端维护：新增、修改、删除都在云开发控制台
+ * 或后台完成，小程序端不内置任何演示数据、也不会自动往云端灌数据。
  * 对外暴露的仍然是原来那套「全部返回 Promise」的接口，页面代码零改动。
+ * 帖子列表有两条读取路径：
+ *   getPosts()      全量（≤100 条），保留给需要整表的地方；
+ *   getPostPage()   云端 keyset 游标分页，一页 10 条，首页专用，无 skip 深分页。
  * 本地 Storage 只做两件事：
- *   1) 离线只读快照（cloud 挂了还能看内容，页面会明确提示离线）
+ *   1) 离线只读快照（缓存云端已加载的内容，不产生新数据）
  *   2) 首次上云时把旧版 baby_food_state_v1 的数据迁移到云端（只迁一次）
  * ------------------------------------------------------------------
  */
 const U = require('./util')
 const ING = require('./ingredients')
 const CLOUD = require('./cloud')
-const SEED = require('./seed-posts')
+const COL = require('./collections')
 
-const COL = {
-  STATE: 'bf_user_state',
-  POSTS: 'bf_posts',
-  COMMENTS: 'bf_comments'
-}
+// 首页云端游标分页的每页条数，与 utils/virtual-list.js 的 PAGE_SIZE 保持一致
+const POST_PAGE_SIZE = 10
 const CACHE_KEY = 'baby_food_cloud_cache_v2'
-const COMMUNITY_KEY = 'baby_food_cloud_community_v2'
+// v2 快照里存过客户端内置的演示帖 / 演示评论，换 key 让它自然失效；
+// v3 只缓存云端真实读取到的内容。
+const COMMUNITY_KEY = 'baby_food_cloud_community_v3'
 const LEGACY_KEY = 'baby_food_state_v1'
 const MIGRATED_KEY = 'baby_food_migrated_v2'
 // 记住「属于当前 openid 的私有文档 _id」，避免换账号后误绑到别人的文档
@@ -41,7 +45,7 @@ let cache = null                                  // 私有状态快照
 let community = { posts: [], comments: [] }       // 社区内容快照
 let pendingChanges = false                        // 离线期间的改动未同步
 
-/* ---------------- 种子数据 ---------------- */
+/* ---------------- 默认私有状态 ---------------- */
 
 function seedPrivate() {
   return {
@@ -65,15 +69,10 @@ function seedPrivate() {
 }
 
 /**
- * 离线兜底用的社区内容：与云端 bf_posts 的 33 条演示帖同源（utils/seed-posts.js）。
- * 全部 isSeed:true、不带归属字段，任何账号都不会算作「我的帖子 / 我的评论」。
+ * 社区内容没有本地初始数据源，全部来自云端 bf_posts / bf_comments。
+ * community 只在云端读取成功后写入离线只读快照；云端首次就不可用时它是空列表，
+ * 首页会显示空状态，不会凭空造出演示数据。
  */
-function seedCommunity() {
-  const t = now()
-  const posts = SEED.buildPosts(t)
-  const comments = SEED.buildComments(t, posts)
-  return { posts: posts, comments: comments }
-}
 
 /* ---------------- 本地快照 / 旧数据迁移 ---------------- */
 
@@ -103,7 +102,7 @@ function withOwner(doc) {
   return d
 }
 
-/** 演示种子内容不属于任何真实账号，永远不算「我的」 */
+/** 云端若残留历史演示内容，也不属于任何真实账号，永远不算「我的」 */
 function isSeedContent(item) {
   if (!item) return true
   if (item.isSeed === true) return true
@@ -193,8 +192,12 @@ function bumpPost(id, field, delta) {
   if (!isCloudMode()) return Promise.resolve()
   return findPostDoc(id).then(function (doc) {
     if (!doc) return null
+    const _ = CLOUD.command()
     const patch = {}
-    patch[field] = CLOUD.command().inc(delta)
+    patch[field] = _.inc(delta)
+    // 历史兼容字段 hotScore 仍随互动原子累加（首页已改为按时间排序，不再读它）。
+    // 用 inc 原子更新，避免多人同时点赞时读-改-写丢更新。
+    patch.hotScore = _.inc(field === 'favCount' ? delta * 2 : delta)
     return CLOUD.db().collection(COL.POSTS).doc(doc._id).update({ data: patch })
       .then(function (res) { return assertWrite(res, 'updated') })
   }).catch(function (err) {
@@ -281,7 +284,7 @@ function addMessage(msg) {
   return commit({ messages: messages }, true)
 }
 
-/* ---------------- 启动：建文档 / 播种 / 迁移 ---------------- */
+/* ---------------- 启动：建文档 / 迁移 ---------------- */
 
 /**
  * 读取私有状态文档。
@@ -345,11 +348,9 @@ function loadOrCreateState(db, legacy) {
 }
 
 /**
- * 启动只负责私有状态文档。
- * 社区内容（33 条演示帖）由云端统一维护，客户端不再自动播种：
- *   1) 云端清空后不会把旧的 4 条种子帖重新灌回来；
- *   2) 不同账号启动时不会各播一份造成重复文档。
- * 读不到云端时，init() 的 catch 仍用 seedCommunity() 做离线只读兜底。
+ * 启动只负责私有状态文档（建/读 + 旧版本地数据迁移）。
+ * 社区内容完全由云端提供，这里不写入、不补齐任何帖子或评论。
+ * 云端不可用时 init() 的 catch 转入离线只读快照模式。
  */
 function bootstrap() {
   if (!CLOUD.isReady()) throw new Error('云开发未就绪')
@@ -357,9 +358,6 @@ function bootstrap() {
   const legacy = readLocal(MIGRATED_KEY) ? null : readLocal(LEGACY_KEY)
 
   return loadOrCreateState(db, legacy).then(function () {
-    // 冷启动先在内存里放一份同源兜底内容；云端读取成功会被 loadPosts() 覆盖，
-    // 云端读取失败时首页也不会退化成空列表。
-    if (!community.posts || !community.posts.length) community = seedCommunity()
     offline = false
     return cache
   })
@@ -373,8 +371,13 @@ function init() {
       err && (err.errCode || err.code || ''), err && (err.errMsg || err.message || ''), err)
     offline = true
     cache = mergePrivate(readLocal(CACHE_KEY) || seedPrivate())
+    // 没有云端数据时只能用「曾经真实加载过」的快照；没有就保持空列表，
+    // 绝不再用内置演示内容填充。
     const c = readLocal(COMMUNITY_KEY)
-    community = c && c.posts && c.posts.length ? c : seedCommunity()
+    community = c ? {
+      posts: Array.isArray(c.posts) ? c.posts : [],
+      comments: Array.isArray(c.comments) ? c.comments : []
+    } : { posts: [], comments: [] }
     return cache
   }).then(function (c) {
     return syncPending().then(function () { return c })
@@ -484,7 +487,7 @@ function decoratePost(p) {
   return d
 }
 
-/** 同一 id 只保留一条：不同 openid 各自播种时可能产生重复种子帖 */
+/** 同一 id 只保留一条：云端历史数据或多份快照合并时可能出现重复文档 */
 function dedupePosts(list) {
   const seen = {}
   return (list || []).filter(function (p) {
@@ -518,9 +521,185 @@ function getPosts() {
   })
 }
 
+/* ---------------- 云端游标分页（首页专用） ---------------- */
+
+/**
+ * 首页只剩「最新 / 我的收藏」两个筛选，两者都按发布时间倒序。
+ * 保留这个函数让 buildPageWhere / localPostPage / getPostPage 共用同一排序列来源；
+ * hotScore 仍会写入云端作为历史兼容字段，但不再参与任何排序。
+ */
+function sortFieldOf() {
+  return 'createdAt'
+}
+
+function postSortId(p) {
+  return String((p && (p.sortId || p.id)) || '')
+}
+
+function postScore(p) {
+  return (Number(p && p.likeCount) || 0) + (Number(p && p.favCount) || 0) * 2
+}
+
+/**
+ * keyset 游标条件：严格排在「上一页最后一条」之后。
+ *   (排序值 < last.value) OR (排序值 == last.value AND sortId < last.sortId)
+ * sortId 是业务 id 的副本（唯一且稳定），既避开系统 _id 依赖，也让离线兜底
+ * 与云端用同一套游标；收藏筛选把 id: _.in(ids) 复制进每个分支，
+ * 从而避开同一字段上 in / lt 两个命令冲突。
+ * 不用 skip：深分页不会越翻越慢，也不会因插入新帖而错位。
+ */
+function buildPageWhere(_, filter, favoriteIds, cursor) {
+  const field = sortFieldOf()
+  const base = {}
+  if (filter === '收藏') base.id = _.in(favoriteIds || [])
+  if (!cursor) return Object.keys(base).length ? base : null
+
+  const a = Object.assign({}, base)
+  a[field] = _.lt(cursor.value)
+  const b = Object.assign({}, base)
+  b[field] = cursor.value
+  b.sortId = _.lt(cursor.sortId)
+  return _.or([a, b])
+}
+
+function cursorOf(row, field) {
+  return { value: row[field], sortId: postSortId(row) }
+}
+
+function decorateRows(rows) {
+  return (rows || []).map(function (r) { return decoratePost(withOwner(r)) })
+}
+
+/** 离线兜底：本地快照补齐派生字段后，按与云端完全相同的规则排序 + 游标切片 */
+function localPostPage(filter, favoriteIds, cursor, limit) {
+  const field = sortFieldOf()
+  const ids = {}
+  ;(favoriteIds || []).forEach(function (id) { ids[id] = true })
+
+  let list = dedupePosts(community.posts).map(function (p) {
+    return Object.assign({}, p, {
+      hotScore: typeof p.hotScore === 'number' ? p.hotScore : postScore(p),
+      sortId: postSortId(p)
+    })
+  })
+  if (filter === '收藏') list = list.filter(function (p) { return ids[p.id] })
+  list.sort(function (x, y) {
+    if (y[field] !== x[field]) return y[field] - x[field]
+    return y.sortId < x.sortId ? -1 : (y.sortId > x.sortId ? 1 : 0)
+  })
+
+  // 列表是降序：跳过所有「排在游标之前或与游标相同」的条目，
+  // 第一个严格排在游标之后的条目就是下一页起点（与云端 _.lt 同义）。
+  // 首页（cursor 为空）从第 0 条开始。
+  let start = 0
+  if (cursor) {
+    start = list.length
+    for (let i = 0; i < list.length; i++) {
+      const p = list[i]
+      const beforeOrAt = p[field] > cursor.value ||
+        (p[field] === cursor.value && p.sortId >= cursor.sortId)
+      if (!beforeOrAt) { start = i; break }
+    }
+  }
+
+  const window = list.slice(start, start + limit + 1)
+  const hasMore = window.length > limit
+  const page = window.slice(0, limit)
+  const next = hasMore && page.length
+    ? { value: page[page.length - 1][field], sortId: page[page.length - 1].sortId }
+    : null
+  return { list: decorateRows(page), cursor: next, hasMore: hasMore }
+}
+
+/**
+ * 首页列表数据源：云端游标分页，一页 10 条。
+ * 返回 { list, cursor, hasMore }；把 cursor 原样传给下一次调用即可翻页。
+ * 云端不可用（离线 / 权限 / 集合或索引缺失）时自动降级为同规则的本地快照分页。
+ *
+ * 注意：游标是排序快照，按 createdAt 取页。会话期间有新帖发布会让排序轻微变化，
+ * 下拉刷新重置游标即可拿到最新顺序（互动计数不再影响排序）。
+ */
+function getPostPage(options) {
+  const o = options || {}
+  const filter = o.filter || '最新'
+  const limit = Math.max(1, Number(o.limit) || POST_PAGE_SIZE)
+  const cursor = o.cursor || null
+  const favoriteIds = o.favoriteIds || []
+  const field = sortFieldOf()
+
+  return ready().then(function () {
+    if (filter === '收藏' && !favoriteIds.length) {
+      return { list: [], cursor: null, hasMore: false }
+    }
+    if (!isCloudMode()) {
+      console.info('[baby-food] 离线模式，首页分页使用本地快照（' +
+        dedupePosts(community.posts).length + ' 条）')
+      return localPostPage(filter, favoriteIds, cursor, limit)
+    }
+
+    let q
+    try {
+      const _ = CLOUD.command()
+      const col = CLOUD.db().collection(COL.POSTS)
+      const where = buildPageWhere(_, filter, favoriteIds, cursor)
+      q = (where ? col.where(where) : col)
+        .orderBy(field, 'desc').orderBy('sortId', 'desc').limit(limit + 1)
+    } catch (e) {
+      return localPostPage(filter, favoriteIds, cursor, limit)
+    }
+
+    return q.get().then(function (res) {
+      const rows = (res && res.data) || []
+      const hasMore = rows.length > limit
+      const page = rows.slice(0, limit)
+      const next = hasMore && page.length ? cursorOf(page[page.length - 1], field) : null
+      // 第一页写一份离线快照，云端挂了还能看到已加载过的内容。
+      // 直接替换而非 concat，避免把任何历史演示数据混进快照。
+      if (page.length && !cursor) {
+        community.posts = dedupePosts(page.map(withOwner))
+        saveCommunity()
+      }
+      // 诊断：只有 10 条却显示「已全部加载」时，一眼看出云端实际返回多少
+      console.info('[baby-food] 分页 ' + filter + (cursor ? '（续页）' : '（首屏）') +
+        '：云端返回 ' + rows.length + ' 条，取 ' + page.length + ' 条，hasMore=' + hasMore)
+      return { list: decorateRows(page), cursor: next, hasMore: hasMore }
+    }).catch(function (err) {
+      console.warn('[baby-food] 云端分页读取失败，改用本地快照（' +
+        dedupePosts(community.posts).length + ' 条）：',
+        err && (err.errCode || err.code || ''), err && (err.errMsg || err.message || ''))
+      return localPostPage(filter, favoriteIds, cursor, limit)
+    })
+  })
+}
+
+/** 当前账号收藏的帖子 id（私有状态文档，供「收藏」筛选下推到云端） */
+function getFavoriteIds() {
+  return ready().then(function () {
+    const fav = (cache && cache.favorites) || {}
+    return Object.keys(fav).filter(function (k) { return !!fav[k] })
+  })
+}
+
+/** 用当前私有状态重装饰已有列表：软刷新零网络请求、保持滚动位置 */
+function decoratePosts(list) {
+  return (list || []).map(decoratePost)
+}
+
+/** 详情页按 id 直查单条，不再为了找一条帖子把整个集合拉回来 */
 function getPost(id) {
-  return getPosts().then(function (list) {
-    return list.filter(function (x) { return x.id === id })[0] || null
+  return ready().then(function () {
+    const local = function () {
+      const hit = dedupePosts(community.posts).filter(function (p) { return p.id === id })[0]
+      return hit ? decoratePost(hit) : null
+    }
+    if (!isCloudMode()) return local()
+    return findPostDoc(id).then(function (doc) {
+      return doc ? decoratePost(withOwner(doc)) : local()
+    }).catch(function (err) {
+      console.warn('[baby-food] 帖子详情读取失败，改用本地快照：',
+        err && (err.errMsg || err.message || ''))
+      return local()
+    })
   })
 }
 
@@ -528,8 +707,9 @@ function addPost(input) {
   return ready().then(function () {
     if (!isCloudMode()) return Promise.reject(new Error('云端不可用，暂无法发布帖子'))
     const u = cache.user
+    const postId = U.uid('post')
     const post = {
-      id: U.uid('post'),
+      id: postId,
       authorId: u ? u.nickName : 'cloud_user',
       authorName: u ? u.nickName : '我',
       authorAvatar: (u && u.avatarUrl && !u.isImageAvatar) ? u.avatarUrl : '🍼',
@@ -543,7 +723,10 @@ function addPost(input) {
       images: input.images || [],
       audit: input.audit || null,
       likeCount: 0, commentCount: 0, favCount: 0,
-      createdAt: now()
+      createdAt: now(),
+      // 云端游标分页的排序列 + tiebreaker，缺了新帖会永远排在列表末尾
+      hotScore: 0,
+      sortId: postId
     }
     return CLOUD.db().collection(COL.POSTS).add({ data: post }).then(function () {
       // 云端文档由平台补 _openid；本地快照同步补一份归属，离线时也能判定
@@ -716,13 +899,30 @@ function deleteRecipe(id) {
 
 /* ---------------- 汇总 / 重置 ---------------- */
 
+/**
+ * 「我的帖子」数量：改用云端 count()，不再把整个集合拉回来数。
+ * 只按稳定账号 uid 统计，不带 authorUid 的历史内容天然不会被误算成我的。
+ * 没有 uid 时返回 0，而不是退回去按 _openid 猜（那样会把不属于当前
+ * 账号的内容一并统计进去）。
+ */
+function myPostCount() {
+  const uid = currentUid()
+  return ready().then(function () {
+    if (!isCloudMode()) return dedupePosts(community.posts).filter(isMineContent).length
+    if (!uid) return 0
+    return CLOUD.db().collection(COL.POSTS).where({ authorUid: uid }).count()
+      .then(function (res) { return (res && res.total) || 0 })
+      .catch(function () { return 0 })
+  })
+}
+
 function getSummary() {
-  return ready().then(loadPosts).then(function (posts) {
+  return myPostCount().then(function (postCount) {
     const fav = Object.keys(cache.favorites || {}).filter(function (k) { return cache.favorites[k] }).length
     const normal = Object.keys(cache.ingredientStates || {}).filter(function (k) { return cache.ingredientStates[k] === 'normal' }).length
     const allergy = Object.keys(cache.ingredientStates || {}).filter(function (k) { return cache.ingredientStates[k] === 'allergy' }).length
     return {
-      postCount: posts.filter(isMineContent).length,
+      postCount: postCount,
       favCount: fav,
       recipeCount: (cache.recipes || []).length,
       normalCount: normal,
@@ -730,6 +930,17 @@ function getSummary() {
       unread: unreadCount(),
       totalIngredients: ING.INGREDIENTS.length + (cache.customIngredients || []).length
     }
+  })
+}
+
+/**
+ * 首页头部只需要未读数。单独给一个不碰帖子集合的入口，
+ * 避免首页每次刷新都经 getSummary() 触发一次全表读取，
+ * 把云端游标分页的意义抵消掉。
+ */
+function getHomeSummary() {
+  return ready().then(function () {
+    return { unread: unreadCount() }
   })
 }
 
@@ -753,14 +964,11 @@ module.exports = {
   setIngredientState: setIngredientState, clearIngredientStates: clearIngredientStates,
   addCustomIngredient: addCustomIngredient,
   getPosts: getPosts, getPost: getPost, addPost: addPost,
+  getPostPage: getPostPage, getFavoriteIds: getFavoriteIds, decoratePosts: decoratePosts,
   toggleLike: toggleLike, toggleFavorite: toggleFavorite,
   getComments: getComments, addComment: addComment,
   getMessages: getMessages, unreadCount: unreadCount,
   markMessageRead: markMessageRead, markAllRead: markAllRead,
   getRecipes: getRecipes, getRecipe: getRecipe, saveRecipe: saveRecipe, deleteRecipe: deleteRecipe,
-  getSummary: getSummary, resetAll: resetAll,
-  _seedState: function () {
-    const c = seedCommunity()
-    return Object.assign({}, seedPrivate(), { posts: c.posts, comments: c.comments })
-  }
+  getSummary: getSummary, getHomeSummary: getHomeSummary, resetAll: resetAll
 }
