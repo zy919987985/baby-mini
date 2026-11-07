@@ -16,6 +16,7 @@
 const U = require('./util')
 const ING = require('./ingredients')
 const CLOUD = require('./cloud')
+const SEED = require('./seed-posts')
 
 const COL = {
   STATE: 'bf_user_state',
@@ -30,11 +31,11 @@ const MIGRATED_KEY = 'baby_food_migrated_v2'
 const STATE_DOC_KEY = 'baby_food_state_doc_v2'
 
 function now() { return Date.now() }
-function H(n) { return n * 3600000 }
 function D(n) { return n * 86400000 }
 
 let initPromise = null
 let stateDocId = null
+let myOpenid = null                               // 当前账号的 openid（从私有状态文档读取）
 let offline = false
 let cache = null                                  // 私有状态快照
 let community = { posts: [], comments: [] }       // 社区内容快照
@@ -46,6 +47,9 @@ function seedPrivate() {
   return {
     version: 2,
     user: null,
+    // 稳定的账号标识：登录时生成一次，退出登录不清空，用于判定「帖子是不是我发的」。
+    // 不能放在 user 里，否则 logout 后重新登录会换 uid，历史帖子就认不回来了。
+    accountUid: '',
     // 默认不预填宝宝档案：首次进入展示空状态，引导用户自行添加
     babies: [],
     // 默认所有食材均为「未食用」，过敏/正常由用户实测后自行标记
@@ -60,45 +64,14 @@ function seedPrivate() {
   }
 }
 
+/**
+ * 离线兜底用的社区内容：与云端 bf_posts 的 33 条演示帖同源（utils/seed-posts.js）。
+ * 全部 isSeed:true、不带归属字段，任何账号都不会算作「我的帖子 / 我的评论」。
+ */
 function seedCommunity() {
   const t = now()
-  const posts = [
-    {
-      id: 'post_seed_1', authorId: 'u_xiaoman', authorName: '小满妈妈', authorAvatar: '👩', isMine: false,
-      title: '8月龄｜第一次吃蛋黄就光盘啦',
-      content: '按 1/4 个蛋黄起步，用温水调稀后拌进南瓜泥，没有加任何调味料。连着观察了三天，没有起疹子，今天加到半个啦～分享给同样在排敏期的姐妹。',
-      coverEmoji: '🥚', coverSeed: 'egg-yolk', recipeTitle: '蛋黄南瓜糊', tags: ['8个月', '补铁', '排敏'],
-      images: [], likeCount: 128, commentCount: 2, favCount: 46, createdAt: t - H(3)
-    },
-    {
-      id: 'post_seed_2', authorId: 'u_doudou', authorName: '豆豆的辅食日记', authorAvatar: '🧑', isMine: false,
-      title: '一周不重样的手指食物，娃自己抓着吃',
-      content: '10 个月开始练自主进食。蒸软的南瓜条、西兰花小树、三文鱼小饼都很好抓。关键是全程大人在旁边看着，圆形食物一定切开，别偷懒。',
-      coverEmoji: '🥦', coverSeed: 'finger-food', recipeTitle: '三文鱼时蔬小饼', tags: ['10个月', '手指食物', '自主进食'],
-      images: [], likeCount: 96, commentCount: 0, favCount: 73, createdAt: t - H(11)
-    },
-    {
-      id: 'post_seed_3', authorId: 'u_anran', authorName: '安然', authorAvatar: '👩‍🦰', isMine: false,
-      title: '过敏宝宝也能吃的补铁粥（附避雷清单）',
-      content: '我家娃对蛋清和虾都过敏，食材清单里标成红色之后，生成食谱会自动避开，这点太省心了。今天这锅番茄牛肉小米粥，连汤都喝光。',
-      coverEmoji: '🥩', coverSeed: 'beef-porridge', recipeTitle: '番茄牛肉小米粥', tags: ['过敏友好', '补铁'],
-      images: [], likeCount: 212, commentCount: 1, favCount: 105, createdAt: t - D(1) - H(2)
-    },
-    {
-      id: 'post_seed_4', authorId: 'u_mine', authorName: '我', authorAvatar: '🍼', isMine: true,
-      title: '今天第一次做南瓜米糊，记录一下',
-      content: '跟着详细步骤一步步来，蒸 15 分钟、过筛、冲米粉，居然一次成功。宝宝吃了小半碗，明天继续。',
-      coverEmoji: '🎃', coverSeed: 'pumpkin', recipeTitle: '南瓜铁米粉糊', tags: ['6个月', '第一口辅食'],
-      images: [], likeCount: 18, commentCount: 2, favCount: 5, createdAt: t - D(2)
-    }
-  ]
-  const comments = [
-    { id: 'c_1', postId: 'post_seed_1', authorName: '团子妈', avatar: '👩', content: '请问蛋黄是煮全熟吗？我家还没敢试', createdAt: t - H(2) },
-    { id: 'c_2', postId: 'post_seed_1', authorName: '小满妈妈', avatar: '👩', content: '是的，冷水下锅煮 10 分钟，取蛋黄压散加温水～', createdAt: t - H(1) },
-    { id: 'c_3', postId: 'post_seed_3', authorName: '果果', avatar: '🧑', content: '避雷清单太需要了，收藏！', createdAt: t - D(1) },
-    { id: 'c_4', postId: 'post_seed_4', authorName: '小满妈妈', avatar: '👩', content: '好棒！记得连续观察三天哦', createdAt: t - D(1) },
-    { id: 'c_5', postId: 'post_seed_4', authorName: '我', avatar: '🍼', content: '谢谢，明天试试加一点胡萝卜', createdAt: t - D(1) + H(1) }
-  ]
+  const posts = SEED.buildPosts(t)
+  const comments = SEED.buildComments(t, posts)
   return { posts: posts, comments: comments }
 }
 
@@ -120,12 +93,47 @@ function stripMeta(doc) {
   return d
 }
 
+/**
+ * 共享集合（帖子 / 评论）额外保留归属 openid，仅用于「是不是我的」判定。
+ * 改名为 _owner，避免下划线系统字段被误写回云端。
+ */
+function withOwner(doc) {
+  const d = stripMeta(doc)
+  if (doc && doc._openid) d._owner = doc._openid
+  return d
+}
+
+/** 演示种子内容不属于任何真实账号，永远不算「我的」 */
+function isSeedContent(item) {
+  if (!item) return true
+  if (item.isSeed === true) return true
+  const id = String(item.id || '')
+  return id.indexOf('post_seed_') === 0 || /^c_\d+$/.test(id)
+}
+
+function currentUid() { return (cache && cache.accountUid) || '' }
+
+/**
+ * 帖子 / 评论是否属于当前账号。
+ * 绝不能信任文档里写死的 isMine：那是发布瞬间的静态标记，而社区集合是全端共享的，
+ * 别的账号读到同样会被当成自己的（新账号因此在「我的帖子」里看到别人的 3 条帖子）。
+ * 判定优先级：稳定账号 uid → 云端文档归属 openid；两者都拿不到就不算。
+ */
+function isMineContent(item) {
+  if (!item || isSeedContent(item)) return false
+  const uid = currentUid()
+  if (uid && item.authorUid) return item.authorUid === uid
+  if (myOpenid && item._owner) return item._owner === myOpenid
+  return false
+}
+
 /** 旧版本地数据 → 云数据（只在新用户首次上云时执行一次） */
 function legacyPrivate(s) {
   const seed = seedPrivate()
   return {
     version: 2,
     user: s.user || null,
+    accountUid: '',
     babies: Array.isArray(s.babies) && s.babies.length ? s.babies : seed.babies,
     ingredientStates: s.ingredientStates || seed.ingredientStates,
     customIngredients: s.customIngredients || [],
@@ -135,17 +143,6 @@ function legacyPrivate(s) {
     messages: s.messages || seed.messages
   }
 }
-function legacyCommunity(s) {
-  const posts = (s.posts || []).map(function (p) {
-    return Object.assign({}, p, {
-      images: p.images || [],
-      commentCount: p.commentCount || 0,
-      createdAt: p.createdAt || now()
-    })
-  })
-  return { posts: posts, comments: s.comments || [] }
-}
-
 function mergePrivate(doc) {
   const seed = seedPrivate()
   const out = Object.assign({}, seed, stripMeta(doc))
@@ -179,7 +176,7 @@ function fetchAll(query, max) {
   function page(n) {
     return query.skip(n * size).limit(size).get().then(function (res) {
       const rows = (res && res.data) || []
-      rows.forEach(function (r) { out.push(stripMeta(r)) })
+      rows.forEach(function (r) { out.push(withOwner(r)) })
       if (rows.length === size && out.length < limit) return page(n + 1)
       return out
     })
@@ -296,6 +293,8 @@ function loadOrCreateState(db, legacy) {
 
   function bind(doc) {
     stateDocId = doc._id
+    // 私有文档的系统 _openid 即当前账号身份，用于判定共享帖子的归属
+    myOpenid = doc._openid || null
     writeLocal(STATE_DOC_KEY, stateDocId)
     cache = mergePrivate(doc)
     saveCache()
@@ -303,14 +302,22 @@ function loadOrCreateState(db, legacy) {
   }
   function create() {
     cache = legacy ? legacyPrivate(legacy) : seedPrivate()
+    myOpenid = null
     return db.collection(COL.STATE).add({ data: Object.assign({}, cache) })
       .then(function (added) {
         stateDocId = added._id
         writeLocal(STATE_DOC_KEY, stateDocId)
         writeLocal(MIGRATED_KEY, true)
         saveCache()
-        return true
+        // 新建文档的系统 _openid 只写在云端，读回一次（失败不阻断启动）
+        return db.collection(COL.STATE).doc(added._id).get()
+          .then(function (res) {
+            const d = pickData(res)
+            myOpenid = (d && d._openid) || null
+          })
+          .catch(function () { myOpenid = null })
       })
+      .then(function () { return true })
   }
   function pickData(res) {
     const d = res && res.data
@@ -337,29 +344,22 @@ function loadOrCreateState(db, legacy) {
   })
 }
 
+/**
+ * 启动只负责私有状态文档。
+ * 社区内容（33 条演示帖）由云端统一维护，客户端不再自动播种：
+ *   1) 云端清空后不会把旧的 4 条种子帖重新灌回来；
+ *   2) 不同账号启动时不会各播一份造成重复文档。
+ * 读不到云端时，init() 的 catch 仍用 seedCommunity() 做离线只读兜底。
+ */
 function bootstrap() {
   if (!CLOUD.isReady()) throw new Error('云开发未就绪')
   const db = CLOUD.db()
   const legacy = readLocal(MIGRATED_KEY) ? null : readLocal(LEGACY_KEY)
 
-  return loadOrCreateState(db, legacy).then(function (fresh) {
-    return db.collection(COL.POSTS).limit(1).get().then(function (res) {
-      if ((res.data || []).length) return null
-      const seed = (legacy && fresh) ? legacyCommunity(legacy) : seedCommunity()
-      let chain = Promise.resolve()
-      seed.posts.forEach(function (p) {
-        chain = chain.then(function () { return db.collection(COL.POSTS).add({ data: p }) })
-      })
-      seed.comments.forEach(function (c) {
-        chain = chain.then(function () { return db.collection(COL.COMMENTS).add({ data: c }) })
-      })
-      return chain.then(function () { return seed })
-    })
-  }).then(function (seed) {
-    if (seed) {
-      community = seed
-      saveCommunity()
-    }
+  return loadOrCreateState(db, legacy).then(function () {
+    // 冷启动先在内存里放一份同源兜底内容；云端读取成功会被 loadPosts() 覆盖，
+    // 云端读取失败时首页也不会退化成空列表。
+    if (!community.posts || !community.posts.length) community = seedCommunity()
     offline = false
     return cache
   })
@@ -374,7 +374,7 @@ function init() {
     offline = true
     cache = mergePrivate(readLocal(CACHE_KEY) || seedPrivate())
     const c = readLocal(COMMUNITY_KEY)
-    community = c && c.posts ? c : seedCommunity()
+    community = c && c.posts && c.posts.length ? c : seedCommunity()
     return cache
   }).then(function (c) {
     return syncPending().then(function () { return c })
@@ -389,7 +389,10 @@ function getUser() { return ready().then(function () { return cache.user }) }
 function saveUser(user) {
   // 登录只是记录展示用的昵称/头像，云端同步失败不应让用户登不进去
   return ready().then(function () {
-    return commit({ user: Object.assign({}, user, { loginAt: now() }) }, true)
+    const patch = { user: Object.assign({}, user, { loginAt: now() }) }
+    // 账号 uid 只生成一次，退出登录后重新登录仍认得回自己发过的帖子
+    if (!cache.accountUid) patch.accountUid = U.uid('acct')
+    return commit(patch, true)
   }).then(function () { return cache.user })
 }
 
@@ -469,12 +472,16 @@ function addCustomIngredient(item) {
 
 function decoratePost(p) {
   const c = cache || seedPrivate()
-  return Object.assign({}, p, {
+  const d = Object.assign({}, p, {
     liked: !!(c.likes || {})[p.id],
     favorited: !!(c.favorites || {})[p.id],
     timeText: U.timeAgo(p.createdAt),
-    coverStyle: U.gradientOf(p.coverSeed || p.id)
+    coverStyle: U.gradientOf(p.coverSeed || p.id),
+    // 首页「我的」标签按当前账号动态计算，不读文档里写死的 isMine
+    isMine: isMineContent(p)
   })
+  delete d._owner
+  return d
 }
 
 /** 同一 id 只保留一条：不同 openid 各自播种时可能产生重复种子帖 */
@@ -526,7 +533,7 @@ function addPost(input) {
       authorId: u ? u.nickName : 'cloud_user',
       authorName: u ? u.nickName : '我',
       authorAvatar: (u && u.avatarUrl && !u.isImageAvatar) ? u.avatarUrl : '🍼',
-      isMine: true,
+      authorUid: currentUid(),
       title: input.title,
       content: input.content,
       coverEmoji: input.coverEmoji || '🍲',
@@ -539,12 +546,14 @@ function addPost(input) {
       createdAt: now()
     }
     return CLOUD.db().collection(COL.POSTS).add({ data: post }).then(function () {
-      community.posts = [post].concat(community.posts || [])
+      // 云端文档由平台补 _openid；本地快照同步补一份归属，离线时也能判定
+      const local = Object.assign({}, post, myOpenid ? { _owner: myOpenid } : {})
+      community.posts = [local].concat(community.posts || [])
       saveCommunity()
       return addMessage({
         type: 'system', from: '辅食小助手', avatar: '✅',
         title: '帖子发布成功', desc: post.title, postId: post.id
-      }).then(function () { return decoratePost(post) })
+      }).then(function () { return decoratePost(local) })
     })
   })
 }
@@ -606,7 +615,14 @@ function getComments(postId) {
   return ready().then(loadComments).then(function (list) {
     return list.filter(function (c) { return c.postId === postId })
       .sort(function (a, b) { return a.createdAt - b.createdAt })
-      .map(function (c) { return Object.assign({}, c, { timeText: U.timeAgo(c.createdAt) }) })
+      .map(function (c) {
+        const d = Object.assign({}, c, {
+          timeText: U.timeAgo(c.createdAt),
+          isMine: isMineContent(c)
+        })
+        delete d._owner
+        return d
+      })
   })
 }
 
@@ -618,11 +634,13 @@ function addComment(postId, text) {
       id: U.uid('comment'), postId: postId,
       authorName: u ? u.nickName : '我',
       avatar: (u && u.avatarUrl && !u.isImageAvatar) ? u.avatarUrl : '🍼',
-      content: text, createdAt: now(), isMine: true
+      authorUid: currentUid(),
+      content: text, createdAt: now()
     }
     return CLOUD.db().collection(COL.COMMENTS).add({ data: c })
       .then(function () {
-        community.comments = (community.comments || []).concat([c])
+        const local = Object.assign({}, c, myOpenid ? { _owner: myOpenid } : {})
+        community.comments = (community.comments || []).concat([local])
         saveCommunity()
         return bumpPost(postId, 'commentCount', 1)
       })
@@ -632,7 +650,9 @@ function addComment(postId, text) {
           title: '你评论了一篇帖子', desc: text, postId: postId
         })
       })
-      .then(function () { return Object.assign({}, c, { timeText: '刚刚' }) })
+      .then(function () {
+        return Object.assign({}, c, { timeText: '刚刚', isMine: isMineContent(c) })
+      })
   })
 }
 
@@ -702,7 +722,7 @@ function getSummary() {
     const normal = Object.keys(cache.ingredientStates || {}).filter(function (k) { return cache.ingredientStates[k] === 'normal' }).length
     const allergy = Object.keys(cache.ingredientStates || {}).filter(function (k) { return cache.ingredientStates[k] === 'allergy' }).length
     return {
-      postCount: posts.filter(function (p) { return p.isMine }).length,
+      postCount: posts.filter(isMineContent).length,
       favCount: fav,
       recipeCount: (cache.recipes || []).length,
       normalCount: normal,
@@ -716,7 +736,10 @@ function getSummary() {
 /** 只重置「我」的私有状态，社区帖子是共享数据，不动别人的内容 */
 function resetAll() {
   return ready().then(function () {
-    return commit(Object.assign({}, seedPrivate()), true)
+    const fresh = Object.assign({}, seedPrivate())
+    // 重置的是个人记录，账号身份要保留，否则已发布的帖子会认不回来
+    fresh.accountUid = (cache && cache.accountUid) || ''
+    return commit(fresh, true)
   }).then(function () { return cache })
 }
 

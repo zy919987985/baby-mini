@@ -54,7 +54,7 @@
 
   <view class="section-title">数据与设置</view>
   <view class="card menu-card">
-    <view class="menu-row" bindtap="openAbout"><text class="menu-emoji">☁️</text><text class="flex1">数据存储说明</text><text class="menu-value">云端存储 ›</text></view>
+    <!-- <view class="menu-row" bindtap="openAbout"><text class="menu-emoji">☁️</text><text class="flex1">数据存储说明</text><text class="menu-value">云端存储 ›</text></view> -->
     <view class="menu-row" bindtap="goIngredients"><text class="menu-emoji">🥕</text><text class="flex1">食材清单与过敏标记</text><text class="menu-value">{{summary.totalIngredients}} 种 ›</text></view>
     <view class="menu-row" bindtap="onReset"><text class="menu-emoji">🧹</text><text class="flex1">重置数据</text><text class="menu-value">›</text></view>
   </view>
