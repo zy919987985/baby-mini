@@ -4,7 +4,7 @@
     "appid": "wx214cdea17324bdf8",
     "projectname": "baby-food-helper",
     "description": "宝宝辅食管理小程序",
-    "libVersion": "3.15.1",
+    "libVersion": "3.17.4",
     "setting": {
         "urlCheck": false,
         "es6": true,

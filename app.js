@@ -24,6 +24,8 @@ App({
       cloudReady: this.globalData.cloudReady,
       hasWxCloud: !!(typeof wx !== 'undefined' && wx.cloud),
       hasDatabase: !!(typeof wx !== 'undefined' && wx.cloud && wx.cloud.database),
+      hasImageModel: !!(typeof wx !== 'undefined' && wx.cloud && wx.cloud.extend &&
+        wx.cloud.extend.AI && wx.cloud.extend.AI.createImageModel),
       SDKVersion: (typeof wx !== 'undefined' && wx.getSystemInfoSync)
         ? wx.getSystemInfoSync().SDKVersion : 'unknown'
     })

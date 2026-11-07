@@ -52,6 +52,16 @@
     <view class="stat-cell"><view class="stat-cell-num">{{summary.unread}}</view><view class="stat-cell-label">未读消息</view></view>
   </view>
 
+  <view class="section-title">实用工具</view>
+  <view class="card tool-card" bindtap="openImageGen">
+    <view class="tool-icon">🎨</view>
+    <view class="flex1">
+      <view class="tool-name">生图小助手 <text class="tool-badge">AI</text></view>
+      <view class="tool-desc">输入一句话生成辅食插画，支持保存到相册</view>
+    </view>
+    <text class="tool-arrow">›</text>
+  </view>
+
   <view class="section-title">数据与设置</view>
   <view class="card menu-card">
     <!-- <view class="menu-row" bindtap="openAbout"><text class="menu-emoji">☁️</text><text class="flex1">数据存储说明</text><text class="menu-value">云端存储 ›</text></view> -->

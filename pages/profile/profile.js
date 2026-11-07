@@ -182,6 +182,8 @@ Page({
 
   goIngredients: function () { wx.switchTab({ url: '/pages/ingredients/ingredients' }) },
 
+  openImageGen: function () { wx.navigateTo({ url: '/pages/image-gen/image-gen' }) },
+
   onReset: function () {
     const that = this
     wx.showModal({
