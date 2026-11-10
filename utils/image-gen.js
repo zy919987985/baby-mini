@@ -25,6 +25,7 @@
  */
 const CONFIG = require('./ai-config')
 const U = require('./util')
+const SYS = require('./system-info')
 
 const CFG = CONFIG.IMAGE || {}
 const MIN_LIB = '3.17.4'
@@ -82,12 +83,9 @@ function availability() {
       return { ok: false, hint: '当前环境不是微信小程序，无法调用云开发生图能力。' }
     }
     let libOk = true
-    let sdk = ''
-    try {
-      const info = wx.getSystemInfoSync ? wx.getSystemInfoSync() : null
-      sdk = (info && info.SDKVersion) || ''
-      if (sdk && compareVersion(sdk, MIN_LIB) < 0) libOk = false
-    } catch (e) { /* 取不到版本时不误拦，交给下面的接口存在性判断 */ }
+    const sdk = SYS.sdkVersion()
+    // 取不到版本时不误拦，交给下面的接口存在性判断
+    if (sdk && compareVersion(sdk, MIN_LIB) < 0) libOk = false
     if (!libOk) {
       return {
         ok: false,

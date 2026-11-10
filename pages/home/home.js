@@ -4,20 +4,16 @@ const R = require('../../utils/recipes')
 const CLOUD = require('../../utils/cloud')
 const auth = require('../../utils/auth')
 const VL = require('../../utils/virtual-list')
+const SYS = require('../../utils/system-info')
 
 const PAGE_SIZE = VL.PAGE_SIZE   // 云端每页条数，utils/virtual-list.js 单一来源
 
-/** 取窗口尺寸，兼容没有 wx.getWindowInfo 的旧基础库与本地 Node 测试 */
+/** 取窗口尺寸；新基础库走 getWindowInfo，旧基础库回退，取不到用 375x667 */
 function windowMetrics() {
-  if (typeof wx === 'undefined') return { width: 375, height: 667 }
-  try {
-    const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
-    return {
-      width: Number(info.windowWidth) || 375,
-      height: Number(info.windowHeight) || 667
-    }
-  } catch (e) {
-    return { width: 375, height: 667 }
+  const info = SYS.windowInfo()
+  return {
+    width: Number(info.windowWidth) || 375,
+    height: Number(info.windowHeight) || 667
   }
 }
 

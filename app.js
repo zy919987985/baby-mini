@@ -1,6 +1,7 @@
 const store = require('./utils/store')
 const CLOUD = require('./utils/cloud')
 const auth = require('./utils/auth')
+const SYS = require('./utils/system-info')
 
 App({
   globalData: {
@@ -26,8 +27,7 @@ App({
       hasDatabase: !!(typeof wx !== 'undefined' && wx.cloud && wx.cloud.database),
       hasImageModel: !!(typeof wx !== 'undefined' && wx.cloud && wx.cloud.extend &&
         wx.cloud.extend.AI && wx.cloud.extend.AI.createImageModel),
-      SDKVersion: (typeof wx !== 'undefined' && wx.getSystemInfoSync)
-        ? wx.getSystemInfoSync().SDKVersion : 'unknown'
+      SDKVersion: SYS.sdkVersion() || 'unknown'
     })
 
     // 数据仓库首次启动时建/读云端私有文档、迁移旧本地数据；社区内容全部走云端。

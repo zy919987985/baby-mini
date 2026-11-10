@@ -16,12 +16,13 @@ let client = null
 function loadFactory() {
   let mod
   try {
-    mod = require('@tencent-ai/workbuddy-cloud-sdk/miniprogram')
+    // SDK 是项目内置的官方小程序 bundle，不依赖 npm / 「构建 npm」
+    mod = require('./workbuddy-cloud-sdk')
   } catch (e) {
-    throw new Error('云服务 SDK 未就绪：请在微信开发者工具执行「构建 npm」后重新编译')
+    throw new Error('云服务 SDK 未就绪：请检查 utils/workbuddy-cloud-sdk.js 是否存在且完整')
   }
   if (!mod || typeof mod.createMiniProgramWorkBuddyCloud !== 'function') {
-    throw new Error('云服务 SDK 版本不支持小程序入口，请更新 @tencent-ai/workbuddy-cloud-sdk')
+    throw new Error('云服务 SDK 版本不支持小程序入口，请更新 utils/workbuddy-cloud-sdk.js')
   }
   return mod.createMiniProgramWorkBuddyCloud
 }

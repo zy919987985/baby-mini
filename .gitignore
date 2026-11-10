@@ -9,7 +9,8 @@ project.private.config.json
 .DS_Store
 *.log
 
-# 依赖
+# 依赖（云服务 SDK 已内置为 utils/workbuddy-cloud-sdk.js，无需「构建 npm」）
 node_modules/
+miniprogram_npm/
 
 .workbuddy

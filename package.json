@@ -1,9 +1,0 @@
-{
-  "name": "baby-food-helper",
-  "version": "1.0.0",
-  "private": true,
-  "description": "宝宝辅食管理小程序",
-  "dependencies": {
-    "@tencent-ai/workbuddy-cloud-sdk": "dev"
-  }
-}
