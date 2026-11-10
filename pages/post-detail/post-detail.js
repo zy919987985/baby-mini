@@ -1,3 +1,7 @@
+/**
+ * 【社交类目暂缓】本页已从 app.json 的 pages 移除、并从上传包中排除，
+ * 代码完整保留但不可达、不参与编译。恢复方式见 pages/home/home.js 顶部说明。
+ */
 const store = require('../../utils/store')
 const U = require('../../utils/util')
 const CLOUD = require('../../utils/cloud')

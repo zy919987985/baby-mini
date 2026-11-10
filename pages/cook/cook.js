@@ -286,6 +286,8 @@ Page({
 
   onAnother: function () { return this.onGenerate() },
 
+  /* 社交类目暂缓：跳转到发帖页的入口停用（cook.wxml 对应按钮已注释）。
+     恢复时连同 app.json 的 pages/publish 注册一起放开。
   onPost: auth.guard(function () {
     const r = this.data.recipe
     if (!r || this.data.generating) return
@@ -293,4 +295,5 @@ Page({
       url: '/pages/publish/publish?recipe=' + encodeURIComponent(r.title) + '&emoji=' + encodeURIComponent(r.emoji)
     })
   }),
+  */
 })

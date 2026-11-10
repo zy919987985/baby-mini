@@ -15,6 +15,7 @@ Page({
     }).catch(function (err) { U.showError(err, '食谱加载失败') })
   },
 
+  /* 社交类目暂缓：跳转到发帖页的入口停用（recipe-detail.wxml 对应按钮已注释）。
   onPost: auth.guard(function () {
     const r = this.data.recipe
     if (!r) return
@@ -22,6 +23,7 @@ Page({
       url: '/pages/publish/publish?recipe=' + encodeURIComponent(r.title) + '&emoji=' + encodeURIComponent(r.emoji)
     })
   }),
+  */
 
   onDelete: auth.guard(function () {
     const that = this

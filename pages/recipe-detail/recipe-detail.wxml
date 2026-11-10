@@ -35,7 +35,8 @@
     </view>
 
     <view class="actions">
-      <view class="btn-ghost act-btn" bindtap="onPost">📣 发帖子</view>
+      <!-- 社交类目暂缓：「发帖子」入口停用，onPost 方法见 recipe-detail.js 注释块 -->
+      <!-- <view class="btn-ghost act-btn" bindtap="onPost">📣 发帖子</view> -->
       <view class="btn-ghost act-btn danger" bindtap="onDelete">🗑️ 删除食谱</view>
     </view>
   </block>

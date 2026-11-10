@@ -1,3 +1,8 @@
+/**
+ * 【社交类目暂缓】「消息」tab 已从 app.json 的 pages / tabBar 移除，
+ * 并从上传包中排除；代码完整保留但不可达、不参与编译。
+ * 恢复方式见 pages/home/home.js 顶部说明。
+ */
 const store = require('../../utils/store')
 const U = require('../../utils/util')
 const auth = require('../../utils/auth')

@@ -188,7 +188,7 @@ Page({
     const that = this
     wx.showModal({
       title: '重置数据',
-      content: '会清空你的食谱、食材标记、点赞收藏与消息，恢复到初始状态；社区帖子为共享内容不会删除。此操作不可撤销。',
+      content: '会清空你的食谱与食材标记等个人记录，恢复到初始状态。此操作不可撤销。',
       confirmColor: '#E0526E',
       success: function (res) {
         if (!res.confirm) return

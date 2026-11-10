@@ -1,7 +1,6 @@
 {
-  "navigationBarTitleText": "辅食圈",
+  "navigationBarTitleText": "今日推荐",
   "enablePullDownRefresh": true,
-  "onReachBottomDistance": 100,
   "backgroundTextStyle": "dark",
   "usingComponents": {
     "auth-modal": "/components/auth-modal/auth-modal"

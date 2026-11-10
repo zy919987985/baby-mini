@@ -3,10 +3,7 @@
     "pages/home/home",
     "pages/ingredients/ingredients",
     "pages/cook/cook",
-    "pages/messages/messages",
     "pages/profile/profile",
-    "pages/post-detail/post-detail",
-    "pages/publish/publish",
     "pages/recipe-detail/recipe-detail",
     "pages/image-gen/image-gen"
   ],
@@ -40,12 +37,6 @@
         "text": "制作辅食",
         "iconPath": "images/tab-cook.png",
         "selectedIconPath": "images/tab-cook-on.png"
-      },
-      {
-        "pagePath": "pages/messages/messages",
-        "text": "消息",
-        "iconPath": "images/tab-messages.png",
-        "selectedIconPath": "images/tab-messages-on.png"
       },
       {
         "pagePath": "pages/profile/profile",

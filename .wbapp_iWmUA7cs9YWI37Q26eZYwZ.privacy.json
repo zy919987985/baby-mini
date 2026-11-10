@@ -1,6 +1,4 @@
 [
-  { "UserInfo": "展示你的昵称和头像" },
-  { "Album": "发布辅食帖子时选择照片" },
-  { "AlbumWriteOnly": "把生成的辅食图片保存到相册" },
-  { "EXUserPublishContent": "发布辅食帖子和评论" }
+  { "UserInfo": "选择微信头像与昵称，用于展示你的辅食记录" },
+  { "AlbumWriteOnly": "把生成的辅食图片保存到相册" }
 ]

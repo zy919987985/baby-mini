@@ -49,7 +49,24 @@
     "condition": {},
     "simulatorPluginLibVersion": {},
     "packOptions": {
-        "ignore": [],
+        "ignore": [
+            {
+                "type": "folder",
+                "value": ".workbuddy"
+            },
+            {
+                "type": "folder",
+                "value": "pages/messages"
+            },
+            {
+                "type": "folder",
+                "value": "pages/post-detail"
+            },
+            {
+                "type": "folder",
+                "value": "pages/publish"
+            }
+        ],
         "include": []
     },
     "editorSetting": {}

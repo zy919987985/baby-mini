@@ -44,12 +44,13 @@
     <view class="add-baby" bindtap="openNewBaby">+ 添加宝宝档案</view>
   </block>
 
-  <view class="section-title">我的内容</view>
+  <view class="section-title">我的记录</view>
   <view class="card stat-card">
-    <view class="stat-cell"><view class="stat-cell-num">{{summary.postCount}}</view><view class="stat-cell-label">我的帖子</view></view>
-    <view class="stat-cell"><view class="stat-cell-num">{{summary.favCount}}</view><view class="stat-cell-label">收藏</view></view>
+    <!-- 社交类目暂缓：以下三项为社区/互动数据，暂不展示，代码保留 -->
+    <!-- <view class="stat-cell"><view class="stat-cell-num">{{summary.postCount}}</view><view class="stat-cell-label">我的帖子</view></view> -->
+    <!-- <view class="stat-cell"><view class="stat-cell-num">{{summary.favCount}}</view><view class="stat-cell-label">收藏</view></view> -->
+    <!-- <view class="stat-cell"><view class="stat-cell-num">{{summary.unread}}</view><view class="stat-cell-label">未读消息</view></view> -->
     <view class="stat-cell" bindtap="openRecipes"><view class="stat-cell-num">{{summary.recipeCount}}</view><view class="stat-cell-label">我的食谱 ›</view></view>
-    <view class="stat-cell"><view class="stat-cell-num">{{summary.unread}}</view><view class="stat-cell-label">未读消息</view></view>
   </view>
 
   <view class="section-title">实用工具</view>
@@ -120,7 +121,7 @@
   <view wx:if="{{showAbout}}" class="modal-mask" bindtap="closeAbout">
     <view class="modal" catchtap="noop">
       <view class="modal-title">数据存储说明</view>
-      <view class="about-text">当前版本已接入微信云开发：宝宝档案、食材标记、食谱、点赞收藏与消息存在云数据库，社区帖子与评论全端共享，帖子图片存在云存储。换设备、重装小程序数据都不会丢。</view>
+      <view class="about-text">当前版本已接入微信云开发：宝宝档案、食材标记与食谱保存在云数据库，换设备、重装小程序数据都不会丢。首页的每日推荐辅食由官方号发布，随版本更新，不需要登录即可查看。</view>
       <view class="btn-primary" bindtap="closeAbout">我知道了</view>
     </view>
   </view>
