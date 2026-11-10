@@ -1,0 +1,6 @@
+[
+  { "UserInfo": "展示你的昵称和头像" },
+  { "Album": "发布辅食帖子时选择照片" },
+  { "AlbumWriteOnly": "把生成的辅食图片保存到相册" },
+  { "EXUserPublishContent": "发布辅食帖子和评论" }
+]

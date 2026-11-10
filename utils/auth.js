@@ -11,8 +11,13 @@
  *                                 登录成功后 resolve(user)。多个并发调用复用同一弹层。
  *  - auth.guard(fn)               把任意操作包成「先登录再执行」；用户取消登录时静默放弃。
  *  - auth.login(user) / logout()  写入 / 清除登录态并放行 / 驳回等待中的操作。
+ *  - auth.getCloudAccount()       当前 WorkBuddy 云服务真实会话（未同步时为 null）。
+ *
+ * 云端身份是渐进增强：登录成功后异步建立真实会话，不阻塞登录弹层关闭；
+ * 云端失败只记录日志，本地昵称登录照常可用，但绝不伪造会话。
  */
 const store = require('./store')
+const account = require('./workbuddy-account')
 
 // undefined: 初始化中；null: 未登录；object: 已登录（user 对象）
 let currentUser = undefined
@@ -26,6 +31,11 @@ let resolvers = []
 function init() {
   return store.getUser().then(function (u) {
     currentUser = u || null
+    // 冷启动恢复云端真实会话；失败不阻断启动，也不影响本地登录态
+    account.restore().catch(function (err) {
+      console.warn('[baby-food] 云端账号会话恢复失败（不影响本地登录）：',
+        err && err.message)
+    })
     return currentUser
   }).catch(function () {
     currentUser = null
@@ -90,11 +100,18 @@ function requireLogin() {
   })
 }
 
-/** 登录成功：写库并放行所有等待中的操作 */
+/**
+ * 登录成功：写库并放行所有等待中的操作。
+ * 随后异步建立 WorkBuddy 云服务真实会话（不 await，避免网络慢时登录弹层关不掉）。
+ */
 function login(user) {
   return store.saveUser(user).then(function (saved) {
     currentUser = saved
     resolveAll(saved)
+    account.signIn().catch(function (err) {
+      console.warn('[baby-food] 云端账号建立失败（不影响本地登录）：',
+        err && err.message)
+    })
     return saved
   })
 }
@@ -107,6 +124,9 @@ function cancelLogin() {
 function logout() {
   return store.signOutUser().then(function () {
     currentUser = null
+    account.signOut().catch(function (err) {
+      console.warn('[baby-food] 云端账号退出失败：', err && err.message)
+    })
     return null
   })
 }
@@ -151,5 +171,6 @@ module.exports = {
   registerModal: registerModal,
   unregisterModal: unregisterModal,
   syncLock: syncLock,
-  guard: guard
+  guard: guard,
+  getCloudAccount: function () { return account.currentSession() }
 }
