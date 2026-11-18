@@ -1,14 +1,18 @@
 const store = require('../../utils/store')
 const R = require('../../utils/recipes')
 const U = require('../../utils/util')
-const AI = require('../../utils/ai')
+// 个人主体小程序暂不开放「深度合成」类目：端上不提供 AI 问答 / 文本生成能力。
+// 这里改为纯本地规则引擎（接口与 utils/ai.js 完全一致），生成功能与安全过滤保留。
+// 恢复方式：补齐类目与算法备案后，把本行改回 require('../../utils/ai')，
+// 并恢复 cook.wxml 里 engine-tip / source-tag 两处来源文案。
+const ENGINE = require('../../utils/local-recipe')
 const auth = require('../../utils/auth')
 
 // loading 阶段文案：每 4 秒推进一档，仅作体验提示，不代表真实进度
 const LOADING_STEPS = [
   '正在带入餐次、质地与过敏清单…',
   '正在排除过敏食材及其制品…',
-  'AI 正在搭配全新食谱…',
+  '正在按条件搭配食谱…',
   '正在校验食材与步骤安全性…',
   '正在整理用量与制作步骤…'
 ]
@@ -116,7 +120,7 @@ Page({
         // 过敏清单只读展示，来源与「食材清单」页完全同一份数据
         allergyNames: res[1].filter(function (i) { return i.status === 'allergy' })
           .map(function (i) { return i.name }),
-        aiReady: AI.isAvailable()
+        aiReady: ENGINE.isAvailable()
       })
     }).catch(function (err) { U.showError(err, '加载失败') })
   },
@@ -214,7 +218,7 @@ Page({
     }
 
     // 只生成草稿，不调用 store.saveRecipe
-    return AI.generateRecipe(opt).then(function (res) {
+    return ENGINE.generateRecipe(opt).then(function (res) {
       that._stopTicker()
       that._draftBackup = null
       that.setData({

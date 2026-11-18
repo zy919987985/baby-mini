@@ -65,6 +65,22 @@
             {
                 "type": "folder",
                 "value": "pages/publish"
+            },
+            {
+                "type": "folder",
+                "value": "pages/image-gen"
+            },
+            {
+                "type": "file",
+                "value": "utils/ai.js"
+            },
+            {
+                "type": "file",
+                "value": "utils/image-gen.js"
+            },
+            {
+                "type": "file",
+                "value": "utils/moderation.js"
             }
         ],
         "include": []

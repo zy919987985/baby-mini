@@ -1,3 +1,6 @@
+/* 兜底：任何子元素意外超宽时，也不让整个页面出现横向滚动 */
+page { overflow-x: hidden; }
+
 .hero {
   display: flex;
   align-items: center;
@@ -18,8 +21,11 @@
 .form-link { font-size: 23rpx; color: #FF7A59; }
 .mt { margin-top: 28rpx; }
 
-.chip-row { display: flex; align-items: center; margin-bottom: 8rpx; }
+/* 选项行统一允许换行：质地有 5 个长选项，nowrap 会把 .card 撑出屏幕导致页面横向滚动 */
+.chip-row { display: flex; flex-wrap: wrap; align-items: center; margin-bottom: 8rpx; }
 .chip-row.wrap { flex-wrap: wrap; }
+/* 换行后补行间距，避免第二行贴住第一行 / 贴住下方内容 */
+.chip-row .chip { margin-bottom: 12rpx; }
 
 .baby-single { font-size: 26rpx; color: #6E615A; }
 .baby-link { color: #FF7A59; margin-left: 16rpx; font-size: 23rpx; }

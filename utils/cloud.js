@@ -1,7 +1,7 @@
 /**
  * 微信云开发统一入口
  * ------------------------------------------------------------------
- * 一个环境只 init 一次；数据库、云存储、AI（wx.cloud.extend.AI）共用它。
+ * 一个环境只 init 一次；数据库、云存储共用它。本版本不调用任何内容生成能力。
  * 端上只有环境 ID，没有任何密钥；集合权限由云端安全规则控制。
  *
  * 数据结构（都是 CloudBase NoSQL 集合，已由管理端创建并配置权限）：
@@ -56,7 +56,11 @@ function isCloudFileID(v) {
   return typeof v === 'string' && v.indexOf('cloud://') === 0
 }
 
-/** 上传本地临时图片到云存储，返回可直接给 <image src> 用的 fileID */
+/**
+ * 上传本地临时图片到云存储，返回可直接给 <image src> 用的 fileID。
+ * 社交 / 发帖功能停用后当前没有调用方，保留供日后恢复使用；
+ * 当前版本不读取、不上传用户相册，隐私声明里也不再声明相册权限。
+ */
 function uploadImage(filePath) {
   if (!isReady() || !wx.cloud.uploadFile) {
     return Promise.reject(new Error('云存储未就绪，无法上传图片'))

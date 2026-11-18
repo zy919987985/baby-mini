@@ -182,7 +182,10 @@ Page({
 
   goIngredients: function () { wx.switchTab({ url: '/pages/ingredients/ingredients' }) },
 
+  /* 深度合成类目暂缓：生图小助手页面停用，入口见 profile.wxml 注释。
+     恢复时连同 app.json 路由、project.config.json 打包排除一起放开。
   openImageGen: function () { wx.navigateTo({ url: '/pages/image-gen/image-gen' }) },
+  */
 
   onReset: function () {
     const that = this

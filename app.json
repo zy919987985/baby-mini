@@ -4,8 +4,7 @@
     "pages/ingredients/ingredients",
     "pages/cook/cook",
     "pages/profile/profile",
-    "pages/recipe-detail/recipe-detail",
-    "pages/image-gen/image-gen"
+    "pages/recipe-detail/recipe-detail"
   ],
   "window": {
     "backgroundTextStyle": "dark",

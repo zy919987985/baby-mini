@@ -1,3 +1,11 @@
+/**
+ * 【已停用 · 个人主体暂不开放「深度合成」服务类目】
+ * 本页不再注册到 app.json，且 pages/image-gen/ 已从上传包排除。
+ * 代码与配置完整保留在 .workbuddy/backup/ai-disabled-20261110/。
+ * 恢复步骤：补齐深度合成类目与算法备案 → 恢复 app.json 路由 →
+ * 放开 project.config.json 打包排除 → 恢复 utils/ai-config.js 完整版 →
+ * 恢复 profile.wxml 工具卡片与 profile.js 的 openImageGen。
+ */
 const IMG = require('../../utils/image-gen')
 const U = require('../../utils/util')
 

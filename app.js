@@ -13,8 +13,9 @@ App({
   },
 
   onLaunch() {
-    // 云开发必须先 init，之后 wx.cloud.database() / uploadFile() / extend.AI 才可用。
+    // 云开发必须先 init，之后 wx.cloud.database() 等接口才可用。
     // 一个环境只初始化一次，统一放在 utils/cloud.js。
+    // 个人主体暂不开放深度合成类目，本版本不初始化、也不调用任何内容生成能力。
     const CONFIG = require('./utils/ai-config')
     const ok = CLOUD.init()
     this.globalData.cloudReady = ok && CLOUD.isReady()
@@ -25,8 +26,6 @@ App({
       cloudReady: this.globalData.cloudReady,
       hasWxCloud: !!(typeof wx !== 'undefined' && wx.cloud),
       hasDatabase: !!(typeof wx !== 'undefined' && wx.cloud && wx.cloud.database),
-      hasImageModel: !!(typeof wx !== 'undefined' && wx.cloud && wx.cloud.extend &&
-        wx.cloud.extend.AI && wx.cloud.extend.AI.createImageModel),
       SDKVersion: SYS.sdkVersion() || 'unknown'
     })
 
