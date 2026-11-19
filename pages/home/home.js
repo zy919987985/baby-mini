@@ -138,6 +138,19 @@ Page({
     this.setData(patch)
   },
 
+  /**
+   * 分享给好友：页面内「分享给好友」按钮（open-type="share"）与右上角菜单转发
+   * 共用同一份内容。转发是微信原生基础能力，不涉及社交类目；文案不含诱导分享。
+   * 封面用包内专属图 images/share-cover.jpg（5:4、36KB），避免默认截图带出宝宝昵称。
+   */
+  onShareAppMessage: function () {
+    return {
+      title: '宝宝辅食 · 每日 6 道科学辅食，6 月龄起这样吃',
+      path: '/pages/home/home',
+      imageUrl: '/images/share-cover.jpg'
+    }
+  },
+
   goCook: function () { wx.switchTab({ url: '/pages/cook/cook' }) },
   goIngredients: function () { wx.switchTab({ url: '/pages/ingredients/ingredients' }) },
   goProfile: function () { wx.switchTab({ url: '/pages/profile/profile' }) }
