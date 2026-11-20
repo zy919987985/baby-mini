@@ -33,11 +33,6 @@
       <text class="quick-emoji">👶</text>
       <text class="quick-label">宝宝档案</text>
     </view>
-    <!-- 分享给好友：微信原生转发能力，不涉及社交类目；必须用 button open-type="share" 才能拉起转发面板 -->
-    <button class="quick share-quick" open-type="share" plain>
-      <text class="quick-emoji">🎁</text>
-      <text class="quick-label">分享给好友</text>
-    </button>
   </view>
 
   <!-- 社交类目暂缓：帖子筛选（最新 / 我的收藏）已停用，见文件末尾注释块 -->
